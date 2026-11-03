@@ -12,6 +12,12 @@
 
 배포할 때는 이 세 HTML 파일을 같은 폴더에 복사하면 됩니다(로고도 파일 안에 들어 있음). Chrome이나 Edge로 `index.html`을 여세요. 두 도구의 왼쪽 위 로고를 누르면 홈으로 돌아갑니다.
 
+## 온라인 제안 제출 (Vercel + Supabase, 선택)
+
+Vercel에 배포하고 Supabase를 연결하면 제안자가 폼에서 **[온라인 제출]**로 바로 보내고, 작성자는 [제안 종합]의 **[온라인 제안 불러오기]**(작성자 접근 키 필요)로 가져올 수 있습니다. 교범 파일은 여전히 PC 밖으로 나가지 않습니다. 설정(`config.js`)이 없으면 지금처럼 오프라인(.json 파일)으로 동작합니다.
+
+설정 방법: [`docs/배포_Vercel_Supabase.md`](docs/배포_Vercel_Supabase.md) · DB 설정: [`supabase/schema.sql`](supabase/schema.sql)
+
 ## 입력 파일
 
 - HWPX를 기본으로 읽고, HWP(5.0)도 읽습니다. 암호가 걸렸거나 배포용으로 저장한 HWP는 읽지 못합니다.
@@ -43,6 +49,10 @@
 - `src/author/` : 작성자 도구 원본 (index.html, style.css, js/)
 - `src/form/form.html` : 제안자용 폼 원본
 - `src/assets/` : 로고 (`tools/make_logo.py`로 원본 이미지에서 생성)
+- `src/shared/cloud.js` : Supabase 연결(제안 제출·불러오기). 빌드 때 두 도구에 들어감
+- `supabase/schema.sql` : Supabase 표·권한·작성자 읽기 함수
+- `vercel.json`, `scripts/build-vercel.mjs` : Vercel 배포 설정 (배포 파일만 `dist/`로 모으고 `config.js` 생성)
+- `config.example.js` : 온라인 설정 예시 (실제 `config.js`는 git 제외)
 - `src/build.py` : 원본을 묶어 `index.html`, `교범비교도구.html`, `수정제안폼.html`을 만듭니다. 원본을 고친 뒤 `python src/build.py`를 실행하세요. (루트의 HTML을 직접 고치면 다음 빌드 때 덮어써집니다.)
 - `samples/` : 시험용 가상 교범 HWPX 2개, 정답지, 제안 파일 3개
 - `tools/make_samples.py` : `samples/`를 다시 만듭니다. 한글 자동화로 문단·표·그림을 넣어 한글이 직접 저장하므로, 실행하려면 한글과 pywin32가 필요합니다. 표·그림의 캡션은 개체 바로 앞 문단으로 들어갑니다.

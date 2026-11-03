@@ -425,6 +425,7 @@ button:disabled:hover { border-color: var(--line); color: inherit; }
       <select id="pfCat"></select>
       <select id="pfRes"></select>
       <input id="pfQ" type="search" placeholder="검색">
+      <button id="btnCloud" hidden title="제안자가 온라인으로 제출한 제안을 가져옵니다 (작성자 접근 키 필요)">온라인 제안 불러오기</button>
       <button id="btnPropZip">첨부 이미지 ZIP</button>
       <button id="btnPropXlsx" class="primary">종합 엑셀</button>
     </div>
@@ -486,9 +487,68 @@ button:disabled:hover { border-color: var(--line); color: inherit; }
 
 <div id="modal" class="modal hidden"></div>
 <div id="toast" class="toast"></div>
+<script src="config.js"></script>
 <script>
 // ---- assets/blank.hwpx
 const HWPX_TEMPLATE = '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';
+// ---- shared/cloud.js
+// Supabase 연결 (선택 기능): 수정 제안 온라인 제출·수집
+// config.js(window.SINGU_CONFIG)에 주소와 공개 키가 있을 때만 켜진다. 없으면 오프라인(.json 파일) 방식.
+// 외부 라이브러리 없이 Supabase REST API를 직접 부른다. 권한 설계는 supabase/schema.sql 참고.
+'use strict';
+
+const Cloud = (() => {
+  const cfg = (typeof window !== 'undefined' && window.SINGU_CONFIG) || {};
+  const url = String(cfg.supabaseUrl || '').trim().replace(/\/+$/, '');
+  const key = String(cfg.supabaseAnonKey || '').trim();
+  const enabled = /^https?:\/\//.test(url) && key.length > 20 && !key.startsWith('sb_secret_');
+  const MAX_BYTES = 7_500_000; // 서버 제한(약 8MB)보다 조금 작게
+
+  async function post(path, body, extra = {}) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 30000);
+    try {
+      const res = await fetch(`${url}/rest/v1/${path}`, {
+        method: 'POST',
+        signal: ctrl.signal,
+        // 예전 형식(JWT) anon 키는 Authorization에도 넣고, 새 형식(sb_publishable_…)은 apikey 헤더만 쓴다
+        headers: { 'Content-Type': 'application/json', apikey: key, ...(key.startsWith('eyJ') ? { Authorization: `Bearer ${key}` } : {}), ...extra },
+        body: typeof body === 'string' ? body : JSON.stringify(body),
+      });
+      if (!res.ok) {
+        let msg = '';
+        try { const j = await res.json(); msg = j.message || j.error_description || j.error || ''; } catch (e) { /* 본문 없음 */ }
+        const err = new Error(/invalid key/i.test(msg) ? '작성자 접근 키가 맞지 않습니다.' : `서버 오류 (${res.status})${msg ? ': ' + msg : ''}`);
+        err.status = res.status; err.invalidKey = /invalid key/i.test(msg);
+        throw err;
+      }
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    } catch (e) {
+      if (e.name === 'AbortError') throw new Error('서버가 응답하지 않습니다. 인터넷 연결을 확인해 주세요.');
+      if (e instanceof TypeError) throw new Error('서버에 연결할 수 없습니다. 인터넷 연결을 확인해 주세요.');
+      throw e;
+    } finally { clearTimeout(timer); }
+  }
+
+  // 제안 제출 (공개 키로는 추가만 가능, 읽기 불가)
+  async function submitProposal(row) {
+    const body = JSON.stringify(row);
+    if (body.length > MAX_BYTES) throw new Error('첨부 이미지가 너무 커서 온라인으로 보낼 수 없습니다. 이미지를 줄이거나 [제안 파일 저장]으로 보내 주세요.');
+    await post('proposals', body, { Prefer: 'return=minimal' });
+  }
+
+  // 작성자: 접근 키로 제안 목록 읽기
+  const listProposals = (authorKey, since = null) => post('rpc/list_proposals', { p_key: authorKey, p_since: since });
+
+  const newId = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (crypto.getRandomValues(new Uint8Array(1))[0] & 15);
+    return (c === 'x' ? r : (r & 3) | 8).toString(16);
+  }));
+
+  return { enabled, url, submitProposal, listProposals, newId };
+})();
+
 // ---- zip.js
 // ZIP 읽기/쓰기 + raw deflate 해제 (외부 라이브러리 없이 동작)
 'use strict';
@@ -2910,6 +2970,52 @@ function renderProposals() {
     : '<div class="empty-list">아직 불러온 제안이 없습니다. 제안자에게 받은 <b>.json</b> 파일을 위 영역에 끌어 놓으세요.</div>';
 }
 
+// 온라인 제출 제안 가져오기 (Supabase · 작성자 접근 키)
+const KEY_STORE = 'singu-author-key';
+const sessionKey = { get: () => { try { return sessionStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }, set: (v) => { try { v ? sessionStorage.setItem(KEY_STORE, v) : sessionStorage.removeItem(KEY_STORE); } catch (e) { /* 저장 불가 */ } } };
+
+function askAuthorKey() {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (v) => { if (!done) { done = true; resolve(v); } };
+    modal(`<h3>작성자 접근 키</h3>
+      <p class="muted">온라인으로 제출된 제안을 읽으려면 작성자 접근 키가 필요합니다. 키는 Supabase 설정 때 정한 값입니다.</p>
+      <input id="akey" type="password" class="search" autocomplete="off" placeholder="작성자 접근 키">
+      <label class="chk"><input id="akeyKeep" type="checkbox" checked> 이 창을 닫을 때까지 기억</label>
+      <div class="modal-f"><button data-close>취소</button><button id="akeyOk" class="primary">불러오기</button></div>`, (box, close) => {
+      const inp = $('#akey', box);
+      inp.focus();
+      const ok = () => { const v = inp.value.trim(); if (!v) return inp.focus(); const keep = $('#akeyKeep', box).checked; close(); finish({ key: v, keep }); };
+      $('#akeyOk', box).onclick = ok;
+      inp.onkeydown = (e) => { if (e.key === 'Enter') ok(); };
+      $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal' || e.target.closest('[data-close]')) finish(null); });
+    });
+  });
+}
+
+async function fetchCloudProposals() {
+  let key = sessionKey.get(), keep = true;
+  if (!key) { const r = await askAuthorKey(); if (!r) return; ({ key, keep } = r); }
+  const btn = $('#btnCloud');
+  btn.disabled = true; btn.textContent = '불러오는 중…';
+  try {
+    const rows = await Cloud.listProposals(key);
+    sessionKey.set(keep ? key : '');
+    let added = 0, dup = 0;
+    for (const row of rows || []) {
+      const r = importProposalJson(`온라인 제출 ${String(row.id).slice(0, 8).toUpperCase()}`, JSON.stringify({
+        type: 'kyobeom-proposal', version: 1, savedAt: row.created_at, proposer: row.proposer, manual: row.manual, items: row.items,
+      }));
+      if (!r.error) { added += r.added; dup += r.dup; }
+    }
+    dirty(); render();
+    toast(`온라인 제출 ${rows.length}건 확인 · 새 제안 ${added}건 추가${dup ? ` (이미 있는 ${dup}건 제외)` : ''}`);
+  } catch (e) {
+    if (e.invalidKey) sessionKey.set('');
+    toast(e.message, 'error');
+  } finally { btn.disabled = false; btn.textContent = '온라인 제안 불러오기'; }
+}
+
 function proposalDetail(x) {
   modal(`<h3>${esc(x.no)} · ${esc(x.category)}</h3>
     <dl class="detail">
@@ -3284,6 +3390,8 @@ function bind() {
   $('#pfQ').oninput = (e) => { clearTimeout(pq); pq = setTimeout(() => { UI.pf.q = e.target.value; renderProposals(); }, 250); };
   $('#btnPropXlsx').onclick = exportProposalsXlsx;
   $('#btnPropZip').onclick = exportProposalImages;
+  $('#btnCloud').hidden = !Cloud.enabled;
+  $('#btnCloud').onclick = fetchCloudProposals;
   $('#propTable').onclick = (e) => {
     const th = e.target.closest('th[data-sort]');
     if (th) { const k = th.dataset.sort; UI.psort = { key: k, dir: UI.psort.key === k ? -UI.psort.dir : 1 }; renderProposals(); return; }

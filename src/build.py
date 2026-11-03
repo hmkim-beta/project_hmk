@@ -34,14 +34,22 @@ def write(name, html):
     print('built', name, f'{len(html.encode("utf-8")) // 1024} KB')
 
 
+def shared(name):
+    with open(os.path.join(HERE, 'shared', name), encoding='utf-8') as f:
+        return f.read()
+
+
 def logos(html):
-    return html.replace('{{LOGO}}', data_uri('logo.png')).replace('{{LOGO_MARK}}', data_uri('logo_mark.png'))
+    html = html.replace('{{LOGO}}', data_uri('logo.png')).replace('{{LOGO_MARK}}', data_uri('logo_mark.png'))
+    # 온라인 설정: 같은 폴더의 config.js (없으면 오프라인 모드로 동작)
+    html = html.replace('<!--CONFIG-->', '<script src="config.js"></script>')
+    return html.replace('<!--CLOUD-->', f'<script>\n{shared("cloud.js")}</script>')
 
 
 def build_author():
     html = read('index.html')
     css = read('style.css')
-    js = '\n'.join(f'// ---- {name}\n' + read('js', name) for name in JS_ORDER)
+    js = '// ---- shared/cloud.js\n' + shared('cloud.js') + '\n' + '\n'.join(f'// ---- {name}\n' + read('js', name) for name in JS_ORDER)
     # HWP 원본의 최종본을 HWPX로 만들 때 쓰는 빈 한글 문서 틀 (tools/make_template.py로 생성)
     with open(os.path.join(SRC, 'assets', 'blank.hwpx'), 'rb') as f:
         js = f"// ---- assets/blank.hwpx\nconst HWPX_TEMPLATE = '{base64.b64encode(f.read()).decode()}';\n" + js

@@ -676,6 +676,52 @@ function renderProposals() {
     : '<div class="empty-list">아직 불러온 제안이 없습니다. 제안자에게 받은 <b>.json</b> 파일을 위 영역에 끌어 놓으세요.</div>';
 }
 
+// 온라인 제출 제안 가져오기 (Supabase · 작성자 접근 키)
+const KEY_STORE = 'singu-author-key';
+const sessionKey = { get: () => { try { return sessionStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }, set: (v) => { try { v ? sessionStorage.setItem(KEY_STORE, v) : sessionStorage.removeItem(KEY_STORE); } catch (e) { /* 저장 불가 */ } } };
+
+function askAuthorKey() {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (v) => { if (!done) { done = true; resolve(v); } };
+    modal(`<h3>작성자 접근 키</h3>
+      <p class="muted">온라인으로 제출된 제안을 읽으려면 작성자 접근 키가 필요합니다. 키는 Supabase 설정 때 정한 값입니다.</p>
+      <input id="akey" type="password" class="search" autocomplete="off" placeholder="작성자 접근 키">
+      <label class="chk"><input id="akeyKeep" type="checkbox" checked> 이 창을 닫을 때까지 기억</label>
+      <div class="modal-f"><button data-close>취소</button><button id="akeyOk" class="primary">불러오기</button></div>`, (box, close) => {
+      const inp = $('#akey', box);
+      inp.focus();
+      const ok = () => { const v = inp.value.trim(); if (!v) return inp.focus(); const keep = $('#akeyKeep', box).checked; close(); finish({ key: v, keep }); };
+      $('#akeyOk', box).onclick = ok;
+      inp.onkeydown = (e) => { if (e.key === 'Enter') ok(); };
+      $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal' || e.target.closest('[data-close]')) finish(null); });
+    });
+  });
+}
+
+async function fetchCloudProposals() {
+  let key = sessionKey.get(), keep = true;
+  if (!key) { const r = await askAuthorKey(); if (!r) return; ({ key, keep } = r); }
+  const btn = $('#btnCloud');
+  btn.disabled = true; btn.textContent = '불러오는 중…';
+  try {
+    const rows = await Cloud.listProposals(key);
+    sessionKey.set(keep ? key : '');
+    let added = 0, dup = 0;
+    for (const row of rows || []) {
+      const r = importProposalJson(`온라인 제출 ${String(row.id).slice(0, 8).toUpperCase()}`, JSON.stringify({
+        type: 'kyobeom-proposal', version: 1, savedAt: row.created_at, proposer: row.proposer, manual: row.manual, items: row.items,
+      }));
+      if (!r.error) { added += r.added; dup += r.dup; }
+    }
+    dirty(); render();
+    toast(`온라인 제출 ${rows.length}건 확인 · 새 제안 ${added}건 추가${dup ? ` (이미 있는 ${dup}건 제외)` : ''}`);
+  } catch (e) {
+    if (e.invalidKey) sessionKey.set('');
+    toast(e.message, 'error');
+  } finally { btn.disabled = false; btn.textContent = '온라인 제안 불러오기'; }
+}
+
 function proposalDetail(x) {
   modal(`<h3>${esc(x.no)} · ${esc(x.category)}</h3>
     <dl class="detail">
@@ -1050,6 +1096,8 @@ function bind() {
   $('#pfQ').oninput = (e) => { clearTimeout(pq); pq = setTimeout(() => { UI.pf.q = e.target.value; renderProposals(); }, 250); };
   $('#btnPropXlsx').onclick = exportProposalsXlsx;
   $('#btnPropZip').onclick = exportProposalImages;
+  $('#btnCloud').hidden = !Cloud.enabled;
+  $('#btnCloud').onclick = fetchCloudProposals;
   $('#propTable').onclick = (e) => {
     const th = e.target.closest('th[data-sort]');
     if (th) { const k = th.dataset.sort; UI.psort = { key: k, dir: UI.psort.key === k ? -UI.psort.dir : 1 }; renderProposals(); return; }

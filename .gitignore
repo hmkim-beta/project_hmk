@@ -2,6 +2,10 @@
 /*.hwp
 /*.hwpx
 
+# 온라인 설정(개인 값) · Vercel 빌드 결과
+/config.js
+/dist/
+
 # 파이썬 캐시
 __pycache__/
 *.pyc

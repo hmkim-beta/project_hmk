@@ -79,7 +79,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: s
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap"><span class="local"><i></i>모든 처리는 이 PC 안에서만 · 외부 전송 없음</span></div></header>
+<header class="top"><div class="wrap"><span class="local" id="mode"><i></i>모든 처리는 이 PC 안에서만 · 외부 전송 없음</span></div></header>
 
 <main class="wrap">
   <section class="hero">
@@ -132,5 +132,18 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: s
 </main>
 
 <footer><div class="wrap"><span>신구대조전 · 교범 신·구 비교 도구 (MVP)</span><span>HWPX · HWP · XLSX · JSON</span></div></footer>
+<script src="config.js"></script>
+<script>
+// 온라인(Supabase) 설정이 있으면 안내 문구를 바꿈
+(function () {
+  var c = window.SINGU_CONFIG || {};
+  if (!(c.supabaseUrl && c.supabaseAnonKey)) return;
+  document.getElementById('mode').innerHTML = '<i></i>제안은 온라인 제출 · 교범 파일은 PC 안에서만 처리';
+  var notes = document.querySelectorAll('.note');
+  if (notes[0]) notes[0].innerHTML = '<b>제안은 온라인, 교범은 PC 안에서</b>수정 제안은 온라인으로 바로 제출됩니다. 교범 HWPX 파일은 PC 밖으로 전송되지 않습니다.';
+  var step = document.querySelector('.flow li');
+  if (step) step.innerHTML = '<b>제안 작성<em class="p">제안자</em></b>수정 제안서를 작성해 [온라인 제출]로 보냅니다.';
+})();
+</script>
 </body>
 </html>
