@@ -905,7 +905,7 @@ function llmSettingsDialog(after) {
     <label class="fld"><span>모델</span>
       <input id="gModel" list="gModels" value="${esc(s.model)}" spellcheck="false">
       <datalist id="gModels">${LLM.MODELS.map((m) => `<option value="${m}">`).join('')}</datalist>
-      <small>기본은 ${LLM.MODELS[0]}. 무료 사용량을 넘으면 ${LLM.MODELS[1]}처럼 가벼운 모델을 골라 보세요.</small></label>
+      <small>[키 확인]을 누르면 이 키로 쓸 수 있는 모델로 목록이 바뀌고, 지금 모델을 못 쓰면 알맞은 모델로 자동으로 바꿉니다. 무료 사용량을 넘으면 이름에 lite가 들어간 가벼운 모델을 골라 보세요.</small></label>
     <label class="chk"><input id="gRemember" type="checkbox" ${s.remember ? 'checked' : ''}> 이 브라우저에 키 기억 (끄면 탭을 닫을 때 지워짐)</label>
     <aside class="callout" style="margin:12px 0 0"><b>보내는 내용 확인</b><p>초안을 만들 때 변경 통계, 조항 번호, 바뀐 문구 일부(조항당 약 120자), 작성자가 적은 변경 사유가 Google로 전송됩니다. <b>무료 키는 보낸 내용이 Google 서비스 개선에 쓰일 수 있습니다.</b> 공개되면 안 되는 교범에는 쓰지 마세요.</p></aside>
     <div id="gMsg" class="muted" style="margin-top:8px"></div>
@@ -916,8 +916,15 @@ function llmSettingsDialog(after) {
     $('#gTest', box).onclick = async () => {
       const v = val(); if (!v.key) return msg('키를 넣어 주세요.', true);
       msg('확인 중… (교범 내용은 보내지 않습니다)');
-      try { const models = await LLM.testKey(v.key); msg(`키가 정상입니다. 쓸 수 있는 모델 ${models.length}개${models.includes(v.model) ? ` · ${v.model} 사용 가능` : ` · ⚠ ${v.model}은 목록에 없습니다`}`); }
-      catch (e) { msg(e.message, true); }
+      try {
+        const models = await LLM.testKey(v.key);
+        if (!models.length) return msg('키는 정상이지만 글 생성에 쓸 수 있는 Gemini 모델이 없습니다.', true);
+        // 모델 칸 목록을 이 키로 실제 쓸 수 있는 모델로 바꿈 (추천 모델을 맨 위에)
+        const best = LLM.pickModel(models.slice());
+        $('#gModels', box).innerHTML = [best, ...models.filter((m) => m !== best)].map((m) => `<option value="${esc(m)}">${m === best ? '추천' : ''}</option>`).join('');
+        if (models.includes(v.model)) msg(`키가 정상입니다. ${v.model} 사용 가능 (쓸 수 있는 모델 ${models.length}개)`);
+        else { $('#gModel', box).value = best; msg(`키가 정상입니다. ${v.model}은 쓸 수 없어 ${best}(으)로 바꿨습니다. [저장]을 눌러 주세요.`); }
+      } catch (e) { msg(e.message, true); }
     };
     $('#gClear', box).onclick = () => { LLM.saveSettings({ key: '', model: val().model, remember: false }); $('#gKey', box).value = ''; msg('키를 지웠습니다.'); refreshLlmStatus(); };
     $('#gSave', box).onclick = () => {
@@ -987,7 +994,7 @@ function bindOverall() {
     const btn = $('#btnLlmDraft');
     btn.disabled = true; btn.textContent = 'AI 초안 만드는 중…';
     try {
-      const text = await LLM.draftSummary(prompt);
+      const text = await LLM.draftSummary(prompt, (from, to) => { toast(`${from} 모델을 쓸 수 없어 ${to}(으)로 바꿔 다시 시도합니다.`); refreshLlmStatus(); });
       if (P.summary.overall.trim() && !confirm('지금 총평 아래에 AI 초안을 덧붙일까요?')) return;
       const { model } = LLM.loadSettings();
       P.summary.overall = (P.summary.overall.trim() ? P.summary.overall.trim() + '\n\n' : '') + `[AI 초안 · ${LLM.PROVIDER} ${model} · 검토 필요]\n${text}`;

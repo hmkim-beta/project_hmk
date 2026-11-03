@@ -76,7 +76,11 @@ const LLM = (() => {
         const msg = data.error?.message || '';
         if (reason === 'API_KEY_INVALID' || /api key not valid/i.test(msg)) throw new Error('Gemini API 키가 올바르지 않습니다. [AI 설정]에서 키를 확인해 주세요.');
         if (res.status === 429) throw new Error('Gemini 무료 사용량을 초과했습니다. 잠시 뒤 다시 시도하거나 다른 모델을 골라 주세요.');
-        if (res.status === 404) throw new Error(`모델을 찾을 수 없습니다(${loadSettings().model}). [AI 설정]에서 다른 모델을 골라 주세요.`);
+        if (res.status === 404 || /not found|is not supported for generateContent/i.test(msg)) {
+          const err = new Error(`모델을 찾을 수 없습니다(${loadSettings().model}). [AI 설정]에서 [키 확인]을 눌러 쓸 수 있는 모델을 골라 주세요.`);
+          err.modelNotFound = true;
+          throw err;
+        }
         if (res.status === 403) throw new Error('이 키로는 Gemini API를 쓸 수 없습니다. Google AI Studio에서 키 권한을 확인해 주세요.');
         throw new Error(`Gemini 오류 (${res.status})${msg ? ': ' + msg : ''}`);
       }
@@ -88,16 +92,33 @@ const LLM = (() => {
     } finally { clearTimeout(timer); }
   }
 
-  // 키 확인: 모델 목록을 읽어 봄 (교범 내용은 보내지 않음)
+  // 키 확인: 이 키로 글 생성(generateContent)을 할 수 있는 Gemini 모델 목록 (교범 내용은 보내지 않음)
   async function testKey(key) {
-    const data = await geminiFetch('models?pageSize=100', { method: 'GET' }, key);
-    return (data.models || []).map((m) => m.name.replace(/^models\//, '')).filter((n) => /^gemini/.test(n));
+    const names = [];
+    let page = '';
+    for (let i = 0; i < 5; i++) {
+      const data = await geminiFetch(`models?pageSize=1000${page ? '&pageToken=' + encodeURIComponent(page) : ''}`, { method: 'GET' }, key);
+      for (const m of data.models || []) {
+        if ((m.supportedGenerationMethods || ['generateContent']).includes('generateContent')) names.push(m.name.replace(/^models\//, ''));
+      }
+      if (!(page = data.nextPageToken)) break;
+    }
+    return names.filter((n) => /^gemini/.test(n));
   }
 
-  async function draftSummary(prompt) {
-    const { key, model } = loadSettings();
-    if (!key) throw new Error('Gemini API 키가 없습니다. [AI 설정]에서 키를 넣어 주세요.');
-    const data = await geminiFetch(`models/${encodeURIComponent(model)}:generateContent`, {
+  // 모델 목록에서 총평용으로 알맞은 것 고르기: 정식(미리보기·실험 아님) flash 최신 → flash-lite → pro → 아무 gemini
+  function pickModel(names) {
+    const special = /(preview|exp|experimental|tts|image|audio|live|embedding|vision|thinking|learnlm|aqa|computer|robotics|nano)/i;
+    const ver = (n) => parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/) || [0, 0])[1]);
+    const byVer = (a, b) => ver(b) - ver(a) || a.length - b.length;
+    const stable = names.filter((n) => !special.test(n) && !/-\d{3}$/.test(n));
+    const pick = (re, list) => list.filter((n) => re.test(n)).sort(byVer)[0];
+    return pick(/-flash$/, stable) || pick(/-flash-lite$/, stable) || pick(/flash/, stable) || pick(/-pro$/, stable)
+      || pick(/flash/, names.filter((n) => !/(tts|image|audio|live|embedding)/i.test(n))) || names.sort(byVer)[0] || '';
+  }
+
+  async function generate(model, prompt) {
+    return geminiFetch(`models/${encodeURIComponent(model)}:generateContent`, {
       method: 'POST',
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: prompt.system }] },
@@ -105,6 +126,23 @@ const LLM = (() => {
         generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
       }),
     });
+  }
+
+  // onSwitch(새 모델): 모델이 없어 자동으로 바꿨을 때 알림
+  async function draftSummary(prompt, onSwitch) {
+    const s = loadSettings();
+    if (!s.key) throw new Error('Gemini API 키가 없습니다. [AI 설정]에서 키를 넣어 주세요.');
+    let data;
+    try { data = await generate(s.model, prompt); }
+    catch (e) {
+      if (!e.modelNotFound) throw e;
+      // 모델이 없어졌거나 이 키로 못 쓰는 경우: 쓸 수 있는 모델을 찾아 한 번 다시 시도
+      const next = pickModel(await testKey(s.key));
+      if (!next || next === s.model) throw new Error('이 키로 쓸 수 있는 Gemini 글 생성 모델을 찾지 못했습니다. Google AI Studio에서 키를 확인해 주세요.');
+      saveSettings({ ...s, model: next });
+      if (onSwitch) onSwitch(s.model, next);
+      data = await generate(next, prompt);
+    }
     const cand = data.candidates?.[0];
     const text = (cand?.content?.parts || []).map((p) => p.text || '').join('').trim();
     if (!text) {
@@ -134,5 +172,5 @@ const LLM = (() => {
     // } finally { clearTimeout(timer); }
   }
 
-  return { buildPrompt, draftSummary, testKey, ready, loadSettings, saveSettings, MODELS: GEMINI_MODELS, PROVIDER: 'Google Gemini' };
+  return { buildPrompt, draftSummary, testKey, pickModel, ready, loadSettings, saveSettings, MODELS: GEMINI_MODELS, PROVIDER: 'Google Gemini' };
 })();
