@@ -887,81 +887,91 @@ function proposalBlock(rs) {
     <tr><td class="num">${rs.total}</td><td class="num">${rs.반영}</td><td class="num">${rs.부분반영}</td><td class="num">${rs.미반영}</td><td class="num">${rs.미심의}</td><td class="num">${rs.done ? pct(rs.rate) : '-'}</td></tr></table></section>`;
 }
 
-const overallBox = () => `<section class="panel"><h3>작성자 총평</h3><textarea id="overall" rows="7" placeholder="주요 개정 방향, 핵심 변경 사항 등을 적어 주세요.">${esc(P.summary.overall)}</textarea><div class="print-only overall-print">${esc(P.summary.overall).replace(/\n/g, '<br>')}</div>
+const overallBox = () => `<section class="panel"><h3>작성자 총평</h3><textarea id="overall" rows="9" placeholder="주요 개정 방향, 핵심 변경 사항 등을 적어 주세요. [통계 기반 초안 작성]을 누르면 위 통계로 초안을 만들어 줍니다.">${esc(P.summary.overall)}</textarea><div class="print-only overall-print">${esc(P.summary.overall).replace(/\n/g, '<br>')}</div>
   <div class="llm-row no-print">
-    <button id="btnLlmDraft" title="Google Gemini로 총평 초안을 만들어 총평 칸 아래에 덧붙입니다">AI 총평 초안 생성</button>
-    <button id="btnLlmSettings" class="ghost" title="Gemini API 키와 모델을 정합니다">AI 설정</button>
-    <button id="btnLlmPrompt" class="ghost" title="LLM에 보낼 요청문을 복사합니다. 다른 LLM 화면에 붙여넣어 쓸 수도 있습니다">LLM 요청문 복사</button>
-    <small id="llmStatus" class="muted">${esc(llmStatus())}</small>
-  </div></section>`;
+    <button id="btnStatDraft" class="primary" title="LLM 없이 위 통계로 총평 초안을 만들어 총평 칸 아래에 덧붙입니다 (폐쇄망에서도 동작)">통계 기반 초안 작성</button>
+    <span class="sp"></span>
+    <span class="llm-label">LLM 요청문</span>
+    <button id="btnLlmTxt" title="폐쇄망 LLM에 넣을 요청문을 텍스트 파일로 내려받습니다">TXT 내려받기</button>
+    <button id="btnLlmPdf" title="요청문을 인쇄 창으로 엽니다. 대상에서 'PDF로 저장'을 고르세요">PDF 내려받기</button>
+    <button id="btnLlmPrompt" class="ghost" title="요청문을 클립보드에 복사합니다">복사</button>
+  </div>
+  <p class="llm-help no-print muted">총평 초안은 LLM 없이 통계로 만듭니다. 폐쇄망 LLM을 쓸 때는 요청문(TXT·PDF)을 내려받아 LLM에 넣고, 받은 결과를 이 칸에 붙여넣으세요.</p></section>`;
 
-function llmStatus() {
-  const s = LLM.loadSettings();
-  return s.key ? `${LLM.PROVIDER} · ${s.model} · 키 ${s.remember ? '이 브라우저에 저장됨' : '이 탭에서만 사용'}` : 'Gemini API 키를 넣으면 AI 초안을 만들 수 있습니다 → [AI 설정]';
-}
+// ---------------------------------------------------------------- 통계 기반 총평 초안 (LLM 없이)
+// 종합 평가 통계를 보고서 문체(~함, ~임)로 정리한다. 같은 자료면 언제나 같은 문장이 나온다.
+function statsDraft() {
+  const d = reportData();
+  const pctOf = (n, t) => (t ? Math.round((n / t) * 100) : 0);
+  const lab = (p) => (clauseOf(p, 'n') || clauseOf(p, 'o')).label;
+  const list = (arr, n = 5) => (arr.length > n ? `${arr.slice(0, n).join(', ')} 외 ${arr.length - n}개` : arr.join(', '));
+  const L = [];
 
-// Gemini API 키·모델 설정
-function llmSettingsDialog(after) {
-  const s = LLM.loadSettings();
-  modal(`<h3>AI 설정 · Google Gemini</h3>
-    <p class="muted">총평 초안은 Google Gemini API로 만듭니다. 무료 API 키는 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → Get API key</a>에서 받을 수 있습니다.</p>
-    <label class="fld"><span>Gemini API 키</span>
-      <div class="keyrow"><input id="gKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" value="${esc(s.key)}"><button id="gShow" class="ghost" type="button">보기</button></div>
-      <small>키는 이 PC의 브라우저에만 저장되고, 작업 파일·GitHub·서버에는 들어가지 않습니다.</small></label>
-    <label class="fld"><span>모델</span>
-      <input id="gModel" list="gModels" value="${esc(s.model)}" spellcheck="false">
-      <datalist id="gModels">${LLM.MODELS.map((m) => `<option value="${m}">`).join('')}</datalist>
-      <small>[키 확인]을 누르면 이 키로 쓸 수 있는 모델로 목록이 바뀌고, 지금 모델을 못 쓰면 알맞은 모델로 자동으로 바꿉니다. 무료 사용량을 넘으면 이름에 lite가 들어간 가벼운 모델을 골라 보세요.</small></label>
-    <label class="chk"><input id="gRemember" type="checkbox" ${s.remember ? 'checked' : ''}> 이 브라우저에 키 기억 (끄면 탭을 닫을 때 지워짐)</label>
-    <aside class="callout" style="margin:12px 0 0"><b>보내는 내용 확인</b><p>초안을 만들 때 변경 통계, 조항 번호, 바뀐 문구 일부(조항당 약 120자), 작성자가 적은 변경 사유가 Google로 전송됩니다. <b>무료 키는 보낸 내용이 Google 서비스 개선에 쓰일 수 있습니다.</b> 공개되면 안 되는 교범에는 쓰지 마세요.</p></aside>
-    <div id="gMsg" class="muted" style="margin-top:8px"></div>
-    <div class="modal-f"><button id="gClear" class="ghost">키 지우기</button><span class="sp"></span><button id="gTest">키 확인</button><button data-close>취소</button><button id="gSave" class="primary">저장</button></div>`, (box, close) => {
-    const val = () => ({ key: $('#gKey', box).value.trim(), model: $('#gModel', box).value.trim() || LLM.MODELS[0], remember: $('#gRemember', box).checked });
-    const msg = (t, err) => { const m = $('#gMsg', box); m.textContent = t; m.style.color = err ? 'var(--c-del)' : ''; };
-    $('#gShow', box).onclick = () => { const i = $('#gKey', box); i.type = i.type === 'password' ? 'text' : 'password'; $('#gShow', box).textContent = i.type === 'password' ? '보기' : '숨기기'; };
-    $('#gTest', box).onclick = async () => {
-      const v = val(); if (!v.key) return msg('키를 넣어 주세요.', true);
-      msg('확인 중… (교범 내용은 보내지 않습니다)');
-      try {
-        const models = await LLM.testKey(v.key);
-        if (!models.length) return msg('키는 정상이지만 글 생성에 쓸 수 있는 Gemini 모델이 없습니다.', true);
-        // 모델 칸 목록을 이 키로 실제 쓸 수 있는 모델로 바꿈 (추천 모델을 맨 위에)
-        const best = LLM.pickModel(models.slice());
-        $('#gModels', box).innerHTML = [best, ...models.filter((m) => m !== best)].map((m) => `<option value="${esc(m)}">${m === best ? '추천' : ''}</option>`).join('');
-        if (models.includes(v.model)) msg(`키가 정상입니다. ${v.model} 사용 가능 (쓸 수 있는 모델 ${models.length}개)`);
-        else { $('#gModel', box).value = best; msg(`키가 정상입니다. ${v.model}은 쓸 수 없어 ${best}(으)로 바꿨습니다. [저장]을 눌러 주세요.`); }
-      } catch (e) { msg(e.message, true); }
-    };
-    $('#gClear', box).onclick = () => { LLM.saveSettings({ key: '', model: val().model, remember: false }); $('#gKey', box).value = ''; msg('키를 지웠습니다.'); refreshLlmStatus(); };
-    $('#gSave', box).onclick = () => {
-      const v = val(); if (!v.key) return msg('키를 넣어 주세요.', true);
-      LLM.saveSettings(v); close(); refreshLlmStatus(); toast('AI 설정을 저장했습니다.');
-      if (after) after();
-    };
-  });
-}
-const refreshLlmStatus = () => { const el = $('#llmStatus'); if (el) el.textContent = llmStatus(); };
+  // 1) 개정 개요
+  L.push('1. 개정 개요');
+  L.push(`- 기존 ${R.old.length}개 조항이 신규 ${R.neu.length}개 조항으로 바뀌었음(${R.neu.length - R.old.length >= 0 ? '+' : ''}${R.neu.length - R.old.length}개).`);
+  L.push(`- 비교한 ${d.total}개 조항 중 ${d.changed}개(${pctOf(d.changed, d.total)}%)가 변경됨: 수정 ${d.c['수정']}, 추가 ${d.c['추가']}, 삭제 ${d.c['삭제']}, 이동 ${d.c['이동']}.`);
+  if (d.numOnly) L.push(`- 내용 변경 없이 번호만 바뀐 조항이 ${d.numOnly}개 있음.`);
+  const ratio = d.total ? d.changed / d.total : 0;
+  const scale = ratio >= 0.6 ? '전면 개정에 가까운' : ratio >= 0.25 ? '상당 부분을 고친' : ratio >= 0.05 ? '일부를 고친' : '소폭의';
+  L.push(`- 변경 비율로 볼 때 ${scale} 개정임.`);
 
-// 보내기 전 확인 (탭마다 처음 한 번 + 내용 미리보기)
-function confirmLlmSend(prompt) {
-  let ok = false;
-  try { ok = sessionStorage.getItem('singu-llm-ok') === '1'; } catch (e) { /* 저장 불가 */ }
-  if (ok) return Promise.resolve(true);
-  return new Promise((resolve) => {
-    let done = false;
-    const finish = (v) => { if (!done) { done = true; resolve(v); } };
-    modal(`<h3>Google Gemini로 보낼까요?</h3>
-      <p class="muted">아래 요청문(${(prompt.system + prompt.user).length.toLocaleString()}자)이 Google 서버로 전송됩니다. 교범 파일 전체는 보내지 않습니다. 무료 키는 보낸 내용이 Google 서비스 개선에 쓰일 수 있습니다.</p>
-      <details><summary>보낼 내용 보기</summary><pre class="llm-preview">${esc(prompt.user)}</pre></details>
-      <label class="chk" style="margin-top:10px"><input id="llmOkKeep" type="checkbox"> 이 탭에서는 다시 묻지 않기</label>
-      <div class="modal-f"><button data-close>취소</button><button id="llmOkGo" class="primary">보내고 초안 만들기</button></div>`, (box, close) => {
-      $('#llmOkGo', box).onclick = () => {
-        if ($('#llmOkKeep', box).checked) { try { sessionStorage.setItem('singu-llm-ok', '1'); } catch (e) { /* 저장 불가 */ } }
-        close(); finish(true);
-      };
-      $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal' || e.target.closest('[data-close]')) finish(false); });
-    });
-  });
+  // 2) 장별 변경
+  const ch = d.chapters.filter((r) => r.total).sort((a, b) => b.total - a.total);
+  L.push('', '2. 장별 변경');
+  if (ch.length) {
+    L.push(`- 변경이 많은 장: ${ch.slice(0, 3).map((r) => `${r.label} ${r.total}건`).join(', ')}.`);
+    const none = d.chapters.filter((r) => !r.total && r.label !== '(머리말)').map((r) => r.label);
+    if (none.length) L.push(`- 변경이 없는 장: ${list(none)}.`);
+  } else L.push('- 장별로 집계된 변경이 없음.');
+
+  // 3) 주요 변경 사항
+  L.push('', '3. 주요 변경 사항');
+  const added = R.pairs.filter((p) => p.type === '추가').map(lab);
+  const deleted = R.pairs.filter((p) => p.type === '삭제').map(lab);
+  const moved = R.pairs.filter((p) => p.type === '이동').map((p) => `${clauseOf(p, 'o').label} → ${clauseOf(p, 'n').label}`);
+  if (added.length) L.push(`- 신설 ${added.length}개: ${list(added)}.`);
+  if (deleted.length) L.push(`- 삭제 ${deleted.length}개: ${list(deleted)}.`);
+  if (moved.length) L.push(`- 위치 이동 ${moved.length}개: ${list(moved, 3)}.`);
+  const top = d.top.slice(0, 5);
+  if (top.length) {
+    L.push(`- 내용 변경 폭이 큰 조항(유사도 낮은 순): ${top.map((p) => `${lab(p)}(${pct(p.sim)})`).join(', ')}.`);
+    for (const p of top.slice(0, 3)) { const r = P.notes[p.key]?.reason; if (r) L.push(`  · ${lab(p)}: ${r.replace(/\s+/g, ' ').trim()}`); }
+  }
+  if (!added.length && !deleted.length && !moved.length && !top.length) L.push('- 내용이 바뀐 조항이 없음.');
+
+  // 4) 표·그림
+  if (d.tf.length) {
+    const cnt = {}; for (const x of d.tf) { const k = `${x.kind} ${x.change}`; cnt[k] = (cnt[k] || 0) + 1; }
+    L.push('', '4. 표·그림 변경');
+    L.push(`- ${Object.entries(cnt).map(([k, v]) => `${k} ${v}건`).join(', ')}.`);
+  }
+
+  // 5) 제안 반영
+  const rs = d.rs;
+  L.push('', `${d.tf.length ? 5 : 4}. 제안 반영 결과`);
+  if (rs.total) {
+    L.push(`- 접수된 수정 제안 ${rs.total}건 중 반영 ${rs.반영}, 부분반영 ${rs.부분반영}, 미반영 ${rs.미반영}건${rs.미심의 ? `, 미심의 ${rs.미심의}건` : ''}.`);
+    if (rs.done) L.push(`- 심의를 마친 ${rs.done}건 기준 반영률(부분반영 포함) ${pct(rs.rate)}.`);
+  } else L.push('- 접수된 수정 제안이 없음.');
+
+  // 6) 검토 시 유의 사항 (자동 점검)
+  const warns = [];
+  const changedPairs = R.pairs.filter((p) => CHANGE_TYPES.includes(p.type));
+  const noReason = changedPairs.filter((p) => !P.notes[p.key]?.reason?.trim()).length;
+  if (noReason) warns.push(`변경 사유가 비어 있는 조항 ${noReason}개 → 대비표 작성 전 사유 입력 필요`);
+  if (rs.미심의) warns.push(`심의하지 않은 제안 ${rs.미심의}건 → 심의 결과 확정 필요`);
+  if (d.numOnly || d.c['추가'] || d.c['삭제']) warns.push('조항 번호가 바뀌었으므로 본문의 조항 인용(예: "제○조", "○-○항")이 맞는지 확인 필요');
+  const edited = R.pairs.filter((p) => p.edited).length;
+  if (edited) warns.push(`직접 수정한 조항 ${edited}개 → 최종본(HWPX)에 반영되었는지 확인 필요`);
+  const manual = R.pairs.filter((p) => p.manual).length;
+  if (manual) warns.push(`수동으로 짝을 지은 조항 ${manual}개 → 짝이 맞는지 한 번 더 확인 필요`);
+  const fig = d.tf.filter((x) => x.kind === '그림').length;
+  if (fig) warns.push(`그림 변경 ${fig}건은 그림 자체를 비교하지 않으므로 원본 그림을 직접 확인 필요`);
+  L.push('', `${d.tf.length ? 6 : 5}. 검토 시 유의 사항`);
+  L.push(...(warns.length ? warns.map((w) => `- ${w}.`) : ['- 자동 점검에서 특이 사항이 없음.']));
+
+  return L.join('\n');
 }
 
 // LLM 요청문에 넣을 재료 (비교 결과에서 바로 뽑음)
@@ -980,10 +990,48 @@ function llmPrompt() {
   });
 }
 
+function llmMeta() {
+  return { manual: P.meta.manual, author: P.meta.author, date: new Date().toLocaleString('ko-KR'), fileTitle: `LLM요청문_${fileSafe(P.meta.manual) || '교범'}_${today()}` };
+}
+
+// PDF: 요청문을 인쇄용 문서로 만들어 브라우저 인쇄 창을 엶 → 대상에서 "PDF로 저장"
+function printLlmPdf() {
+  const meta = llmMeta();
+  const frame = document.createElement('iframe');
+  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(frame);
+  const doc = frame.contentDocument;
+  doc.open(); doc.write(LLM.requestHtml(llmPrompt(), meta, esc)); doc.close();
+  const oldTitle = document.title;
+  document.title = meta.fileTitle; // 저장 파일 이름 기본값
+  setTimeout(() => {
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
+    setTimeout(() => { document.title = oldTitle; frame.remove(); }, 1000);
+  }, 100);
+  toast('인쇄 창에서 대상(프린터)을 "PDF로 저장"으로 고르고 저장하세요.');
+}
+
 function bindOverall() {
   $('#overall').oninput = (e) => { P.summary.overall = e.target.value; $('.overall-print').innerHTML = esc(e.target.value).replace(/\n/g, '<br>'); dirty(); };
+  const needDocs = () => { if (!R.old.length || !R.neu.length) { toast('기존·신규 파일을 모두 올려 주세요.', 'error'); return true; } return false; };
+  $('#btnStatDraft').onclick = () => {
+    if (needDocs()) return;
+    const text = statsDraft();
+    if (P.summary.overall.trim() && !confirm('지금 총평 아래에 통계 기반 초안을 덧붙일까요?')) return;
+    P.summary.overall = (P.summary.overall.trim() ? P.summary.overall.trim() + '\n\n' : '') + `[자동 초안 · 통계 기반 · ${new Date().toLocaleDateString('ko-KR')} · 검토 필요]\n${text}`;
+    dirty(); renderReport();
+    toast('통계 기반 초안을 총평 칸에 덧붙였습니다. 주요 개정 방향 등은 직접 다듬어 주세요.');
+  };
+  $('#btnLlmTxt').onclick = () => {
+    if (needDocs()) return;
+    const meta = llmMeta();
+    download(`${meta.fileTitle}.txt`, '﻿' + LLM.requestText(llmPrompt(), meta), 'text/plain;charset=utf-8');
+    toast('LLM 요청문을 TXT로 저장했습니다.');
+  };
+  $('#btnLlmPdf').onclick = () => { if (!needDocs()) printLlmPdf(); };
   $('#btnLlmPrompt').onclick = () => {
-    if (!R.old.length || !R.neu.length) return toast('기존·신규 파일을 모두 올려 주세요.', 'error');
+    if (needDocs()) return;
     const p = llmPrompt();
     const ta = document.createElement('textarea');
     ta.value = `[지시]\n${p.system}\n\n[자료]\n${p.user}`;
@@ -991,25 +1039,6 @@ function bindOverall() {
     const ok = document.execCommand('copy'); ta.remove();
     toast(ok ? `LLM 요청문(${(p.system + p.user).length}자)을 복사했습니다.` : '복사하지 못했습니다.', ok ? '' : 'error');
   };
-  $('#btnLlmSettings').onclick = () => llmSettingsDialog();
-  const draft = async () => {
-    if (!R.old.length || !R.neu.length) return toast('기존·신규 파일을 모두 올려 주세요.', 'error');
-    if (!LLM.ready()) return llmSettingsDialog(draft); // 키를 넣고 저장하면 이어서 진행
-    const prompt = llmPrompt();
-    if (!(await confirmLlmSend(prompt))) return;
-    const btn = $('#btnLlmDraft');
-    btn.disabled = true; btn.textContent = 'AI 초안 만드는 중…';
-    try {
-      const text = await LLM.draftSummary(prompt, (from, to) => { toast(`${from} 모델을 쓸 수 없어 ${to}(으)로 바꿔 다시 시도합니다.`); refreshLlmStatus(); });
-      if (P.summary.overall.trim() && !confirm('지금 총평 아래에 AI 초안을 덧붙일까요?')) return;
-      const { model } = LLM.loadSettings();
-      P.summary.overall = (P.summary.overall.trim() ? P.summary.overall.trim() + '\n\n' : '') + `[AI 초안 · ${LLM.PROVIDER} ${model} · 검토 필요]\n${text}`;
-      dirty(); renderReport();
-      toast('AI 초안을 총평 칸에 덧붙였습니다. 수치와 조항 번호를 꼭 확인해 주세요.');
-    } catch (e) { toast(e.message, 'error'); }
-    finally { const b = $('#btnLlmDraft'); if (b) { b.disabled = false; b.textContent = 'AI 총평 초안 생성'; } }
-  };
-  $('#btnLlmDraft').onclick = draft;
 }
 
 function exportReportXlsx() {
