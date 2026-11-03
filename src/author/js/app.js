@@ -58,12 +58,15 @@ const Store = (() => {
   };
 })();
 
+// 저장 칸: 실제 작업은 'project', 샘플 체험 중에는 'sample' (sample.js)
+let STORE_KEY = (() => { try { return sessionStorage.getItem('singu-sample') === '1' ? 'sample' : 'project'; } catch (e) { return 'project'; } })();
+
 let saveTimer = null;
 function dirty() {
   P.meta.updatedAt = new Date().toISOString();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
-    try { await Store.set('project', P); renderSaveState(); }
+    try { await Store.set(STORE_KEY, P); renderSaveState(); }
     catch (e) { renderSaveState('브라우저 저장 실패: 작업 파일로 저장해 주세요'); }
   }, 500);
   renderSaveState('저장 중…');
@@ -348,6 +351,9 @@ function render() {
   if (UI.tab === 'proposals') renderProposals();
   if (UI.tab === 'apply') ApplyTab.render();
   if (UI.tab === 'report') renderReport();
+  Sample.renderBar();
+  Sample.renderTour();
+  $('#btnCloud').hidden = !Cloud.enabled || Sample.active(); // 체험 중에는 실제 제안을 섞지 않음
 }
 
 // ------------------------------------------------------------ A. 신·구 비교
@@ -1114,6 +1120,7 @@ function bindHeader() {
 function bind() {
   bindHeader();
   ApplyTab.bind();
+  Sample.bind();
   $('.tabs').onclick = (e) => { const b = e.target.closest('button'); if (b) { UI.tab = b.dataset.tab; render(); window.scrollTo(0, 0); } };
   $('#manualName').oninput = (e) => { P.meta.manual = e.target.value; dirty(); };
   $('#authorName').oninput = (e) => { P.meta.author = e.target.value; dirty(); };
@@ -1215,15 +1222,22 @@ function renderPropStatsOnly() {
 
 async function init() {
   bind();
+  let saved = null;
   try {
-    const saved = await Store.get('project');
+    saved = await Store.get(STORE_KEY);
     if (saved && saved.format === 'kyobeom-project') { P = Object.assign(newProject(), saved); P.settings = { ...newProject().settings, ...saved.settings }; }
   } catch (e) { toast('브라우저 저장소를 열 수 없습니다. 작업 파일 저장을 이용해 주세요.', 'error'); }
+  // 홈의 "샘플로 체험하기"(?sample=1)로 왔거나, 체험 중이었는데 샘플 데이터가 없어진 경우 샘플을 새로 만듦
+  const wants = Sample.wantsStart();
+  if (wants) history.replaceState(null, '', location.pathname); // 새로고침 때 다시 시작하지 않게
+  let startSample = wants && STORE_KEY !== 'sample';
+  if (STORE_KEY === 'sample' && !saved) { STORE_KEY = 'project'; startSample = true; }
   analyze();
   render();
+  if (startSample && !Sample.active()) await Sample.enter();
 }
 
 // 테스트·점검용
-window.App = { get P() { return P; }, get R() { return R; }, ApplyTab, llmPrompt, loadDoc, importProposalJson, analyze, render, exportCompareXlsx, compareRows, reportData, Xlsx, Zip };
+window.App = { get P() { return P; }, get R() { return R; }, Sample, ApplyTab, llmPrompt, loadDoc, importProposalJson, analyze, render, exportCompareXlsx, compareRows, reportData, Xlsx, Zip };
 
 init();

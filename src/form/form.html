@@ -93,6 +93,15 @@ label.f > span, .f > .flabel { font-weight: 700; color: #41505e; font-size: 13px
 .toast.show { opacity: 1; transform: translateX(-50%); }
 .toast.error { background: var(--err); }
 .toast.ok { background: var(--accent); }
+.example-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.example-row span { color: var(--muted); font-size: 13.5px; }
+.ex-btn { background: #fde9df; border-color: #f6c3ad; color: #a63a24; }
+.ex-btn:hover { background: #fbd9ca; color: #a63a24; border-color: var(--accent-2); }
+.ex-bar { display: flex; gap: 16px; align-items: center; background: #fde9df; border: 1px solid #f6c3ad; border-left: 4px solid var(--accent-2); border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; color: #5a2a1c; font-size: 13.5px; }
+.ex-bar > div { flex: 1; }
+.ex-bar ul { margin: 6px 0 0; padding-left: 18px; }
+.ex-bar li { margin: 2px 0; }
+@media (max-width: 640px) { .ex-bar { flex-direction: column; align-items: stretch; } }
 button:disabled { opacity: .6; cursor: wait; }
 @media (max-width: 700px) { .grid { grid-template-columns: 1fr 1fr; } .grid .w2 { grid-column: 1 / -1; } }
 </style>
@@ -118,6 +127,7 @@ button:disabled { opacity: .6; cursor: wait; }
     <div class="eyebrow">교범 사용자 제안</div>
     <h2>교범에서 고칠 곳을 알려 주세요</h2>
     <p>제안 내용을 적고 파일로 저장해 교범 담당자에게 보내면, 개정 심의에 반영됩니다.</p>
+    <div class="example-row"><button id="btnExample" class="ex-btn">작성 예시 보기</button><span>처음이라면 칸마다 무엇을 어떻게 쓰는지 완성된 예시로 먼저 확인해 보세요.</span></div>
   </div>
   <ol class="steps">
     <li><span>01</span><div><b>정보 입력</b>제안자 정보와 교범명을 적습니다.</div></li>
@@ -125,6 +135,16 @@ button:disabled { opacity: .6; cursor: wait; }
     <li id="step3"><span>03</span><div><b>파일 보내기</b>[제안 파일 저장]으로 만든 .json 파일을 메일이나 공유폴더로 보냅니다.</div></li>
   </ol>
   <aside class="callout" id="note"><b>작성 중인 내용은 이 브라우저에만 임시 저장됩니다.</b> 큰 이미지는 자동으로 줄여 저장하며, 보내기 전에 꼭 [제안 파일 저장]을 눌러 주세요.</aside>
+
+  <div id="exampleBar" class="ex-bar" hidden>
+    <div><b>지금 보이는 내용은 작성 예시입니다.</b> 칸마다 무엇을 어떻게 쓰는지 참고하세요. 예시는 제출되지 않습니다.
+      <ul>
+        <li><b>위치</b>: 페이지나 장·절·항 중 하나는 꼭 적고, 표·그림이면 번호도 적습니다.</li>
+        <li><b>현행 내용</b>: 교범 문구를 <b>그대로</b> 옮겨 적으면 담당자가 교범에서 바로 찾아 반영할 수 있습니다.</li>
+        <li><b>수정 제안</b>: 현행 문구를 대신할 문장을 적습니다. <b>근거</b>에는 현장 사례나 관련 규정을 적습니다.</li>
+      </ul></div>
+    <button id="btnExampleClear" class="primary">예시 닫고 직접 쓰기</button>
+  </div>
 
   <section class="box">
     <h2><span class="eyebrow">01</span>제안자 정보</h2>
@@ -202,6 +222,69 @@ function cardHtml(it, i) {
 function render() {
   for (const el of $$('[data-p]')) el.value = el.dataset.p === 'manual' ? S.manual : S.proposer[el.dataset.p];
   $('#cards').innerHTML = S.items.map(cardHtml).join('');
+  $('#exampleBar').hidden = !S.example;
+  $('#btnExample').hidden = !!S.example;
+}
+
+// ---------------------------------------------------------------- 작성 예시
+// 예시 그림: 철조망과 지뢰 표시를 그린 간단한 스케치 (실제 첨부처럼 보이게)
+function exampleSketch() {
+  const c = document.createElement('canvas'); c.width = 640; c.height = 360;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fbf7ec'; x.fillRect(0, 0, 640, 360);
+  x.strokeStyle = '#133046'; x.lineWidth = 3;
+  x.strokeRect(20, 20, 600, 320);
+  x.font = 'bold 22px "Malgun Gothic", sans-serif'; x.fillStyle = '#133046';
+  x.fillText('그림 2-1 수정안 (예시 스케치)', 40, 58);
+  x.lineWidth = 2;
+  for (let i = 0; i < 9; i++) { const sx = 60 + i * 60; x.beginPath(); x.moveTo(sx, 150); x.lineTo(sx + 30, 120); x.lineTo(sx + 60, 150); x.stroke(); }
+  x.fillStyle = '#15959F'; x.font = '18px "Malgun Gothic", sans-serif'; x.fillText('철조망', 60, 185);
+  x.fillStyle = '#F26144';
+  for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(100 + i * 85, 250, 10, 0, Math.PI * 2); x.fill(); }
+  x.fillText('지뢰 매설 위치 (추가 요청)', 60, 300);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+
+function exampleData() {
+  return {
+    example: true,
+    proposer: { unit: '제00보병사단 00연대 0대대 (예시)', rank: '중사', name: '홍길동', contact: '000-0000 (군 전화)' },
+    manual: '가상 야전교범 0-00 소부대 경계작전',
+    items: [
+      { ...newItem(), location: { page: '7', clause: '제2장 1절 2-2', table: '표 2-1', figure: '' }, category: '내용 수정',
+        current: '부소대장', proposed: '분대장',
+        reason: '표 2-1 "근무 편성" 행의 담당. 실제 부대에서는 분대장이 근무 조를 편성·관리하고 있어 현행 교범과 다름 (00연대 경계근무 지침 참고).' },
+      { ...newItem(), location: { page: '9', clause: '2-4', table: '', figure: '그림 2-1' }, category: '그림 변경',
+        current: '그림 2-1 철조망 설치 예 (철조망만 표시됨)', proposed: '철조망과 함께 지뢰 매설 위치를 표시한 그림으로 교체 (첨부 스케치 참고)',
+        reason: '실제 장애물 구성과 달라 교육할 때 혼선이 생김.',
+        images: [{ name: '그림2-1_수정안_예시.jpg', type: 'image/jpeg', data: exampleSketch() }] },
+    ],
+  };
+}
+
+const hasContent = () => S.proposer.unit || S.proposer.name || S.manual || S.items.some((i) => i.current || i.proposed || i.reason || i.images.length);
+
+// 예시를 볼 때 쓰던 내용은 따로 보관했다가, 예시를 닫으면 되돌려 놓는다 (묻지 않고, 잃지 않게)
+const BACKUP_KEY = 'kyobeom-proposal-draft-backup';
+const backup = {
+  put(v) { try { localStorage.setItem(BACKUP_KEY, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  take() { try { const v = JSON.parse(localStorage.getItem(BACKUP_KEY) || 'null'); localStorage.removeItem(BACKUP_KEY); return v; } catch (e) { return null; } },
+};
+
+function showExample() {
+  if (!S.example && hasContent() && !backup.put(S)) {
+    // 첨부 이미지가 많아 보관할 수 없는 드문 경우에만 묻는다
+    if (!confirm('쓰던 내용(첨부 이미지 포함)이 커서 따로 보관할 수 없습니다.\n예시를 보면 쓰던 내용이 지워집니다. 계속할까요? (먼저 [제안 파일 저장]을 권장)')) return;
+  }
+  S = exampleData(); render(); draft();
+  window.scrollTo({ top: $('#exampleBar').offsetTop - 80, behavior: 'smooth' });
+}
+
+function clearExample() {
+  const prev = backup.take();
+  S = prev && Array.isArray(prev.items) ? prev : { proposer: { unit: '', rank: '', name: '', contact: '' }, manual: '', items: [newItem()] };
+  render(); draft(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast(prev ? '예시를 닫고 쓰던 내용으로 돌아왔습니다.' : '예시를 지웠습니다. 이제 직접 작성해 주세요.');
 }
 
 function readImage(file) {
@@ -265,7 +348,7 @@ function save() {
     proposer: S.proposer, manual: S.manual,
     items: S.items.map((it) => ({ ...it, location: { ...it.location, manual: S.manual } })),
   };
-  const name = `제안_${fileSafe(S.manual)}_${fileSafe(S.proposer.unit)}_${fileSafe(S.proposer.name)}_${ymd}.json`;
+  const name = `${S.example ? '예시_' : ''}제안_${fileSafe(S.manual)}_${fileSafe(S.proposer.unit)}_${fileSafe(S.proposer.name)}_${ymd}.json`;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }));
   a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -275,6 +358,7 @@ function save() {
 
 // 온라인 제출 (config.js에 Supabase 설정이 있을 때만)
 async function submitOnline() {
+  if (S.example) return toast('작성 예시는 제출할 수 없습니다. [예시 닫고 직접 쓰기]를 누른 뒤 작성해 주세요.', 'error');
   if (!validate()) return toast('빨간 칸을 채워 주세요.', 'error');
   if (!confirm(`제안 ${S.items.length}건을 교범 담당자에게 온라인으로 제출할까요?\n제출하면 이 화면의 제안 내용은 비워집니다 (제안자 정보는 유지).`)) return;
   const btn = $('#btnSubmit');
@@ -341,9 +425,12 @@ function bind() {
   $('#btnAdd').onclick = () => { S.items.push(newItem()); render(); draft(); $$('.card').pop().scrollIntoView({ behavior: 'smooth' }); };
   $('#btnSave').onclick = save;
   $('#btnClear').onclick = () => {
+    if (S.example) return clearExample();
     if (!confirm('작성 중인 내용을 모두 지우고 새로 작성할까요? (제안자 정보는 유지됩니다)')) return;
     S.items = [newItem()]; render(); draft();
   };
+  $('#btnExample').onclick = showExample;
+  $('#btnExampleClear').onclick = clearExample;
   $('#btnOpen').onclick = () => {
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
     inp.onchange = async () => {
@@ -361,7 +448,12 @@ function bind() {
 try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); if (d && Array.isArray(d.items) && d.items.length) S = d; } catch (e) { /* 임시 저장 없음 */ }
 setupMode();
 bind();
-render();
+// 홈의 "작성 예시 보기"(?example=1)로 온 경우
+if (/[?&]example=1\b/.test(location.search)) {
+  history.replaceState(null, '', location.pathname);
+  render();
+  if (!S.example) showExample();
+} else render();
 </script>
 </body>
 </html>

@@ -14,7 +14,7 @@ import os
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 SRC = os.path.join(HERE, 'author')
-JS_ORDER = ['zip.js', 'parse.js', 'analyze.js', 'diff.js', 'xlsx.js', 'hwpxwrite.js', 'llm.js', 'apply.js', 'app.js']
+JS_ORDER = ['zip.js', 'parse.js', 'analyze.js', 'diff.js', 'xlsx.js', 'hwpxwrite.js', 'llm.js', 'apply.js', 'sample.js', 'app.js']
 
 
 def read(*p):
@@ -46,6 +46,24 @@ def logos(html):
     return html.replace('<!--CLOUD-->', f'<script>\n{shared("cloud.js")}</script>')
 
 
+def sample_data():
+    """샘플 체험용 데이터(가상 교범 2개 + 제안 파일)를 도구 안에 넣는다. 인터넷 없이도 체험할 수 있게."""
+    import glob
+    import json
+    samples = os.path.join(ROOT, 'samples')
+
+    def b64(name):
+        with open(os.path.join(samples, name), 'rb') as f:
+            return base64.b64encode(f.read()).decode()
+
+    proposals = []
+    for p in sorted(glob.glob(os.path.join(samples, '제안_*.json'))):
+        with open(p, encoding='utf-8') as f:
+            proposals.append({'name': os.path.basename(p), 'data': json.load(f)})
+    data = {'oldHwpx': b64('샘플_기존교범.hwpx'), 'newHwpx': b64('샘플_신규교범.hwpx'), 'proposals': proposals}
+    return f"// ---- samples (샘플 체험)\nconst SAMPLE_DATA = {json.dumps(data, ensure_ascii=False)};\n"
+
+
 def build_author():
     html = read('index.html')
     css = read('style.css')
@@ -53,6 +71,7 @@ def build_author():
     # HWP 원본의 최종본을 HWPX로 만들 때 쓰는 빈 한글 문서 틀 (tools/make_template.py로 생성)
     with open(os.path.join(SRC, 'assets', 'blank.hwpx'), 'rb') as f:
         js = f"// ---- assets/blank.hwpx\nconst HWPX_TEMPLATE = '{base64.b64encode(f.read()).decode()}';\n" + js
+    js = sample_data() + js
     html = html.replace('<!--STYLE-->', f'<style>\n{css}</style>')
     html = html.replace('<!--SCRIPTS-->', f'<script>\n{js.replace("</script", "<\\/script")}</script>')
     write('교범비교도구.html', logos(html))

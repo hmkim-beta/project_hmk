@@ -47,6 +47,19 @@ a { color: inherit; }
 .door:hover .go { filter: brightness(.94); }
 .go svg { width: 16px; height: 16px; }
 
+.try { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 22px 24px; margin-bottom: 40px; }
+.try-h { text-align: center; margin-bottom: 16px; }
+.try-h h2 { font-size: 20px; letter-spacing: -.6px; margin: 2px 0 4px; }
+.try-h p { margin: 0; color: var(--muted); font-size: 14px; }
+.try-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.try-card { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border: 1px dashed #cfc4a3; border-radius: 14px; padding: 16px 18px; background: var(--bg); transition: border-color .15s, background .15s; }
+.try-card:hover, .try-card:focus-visible { border-style: solid; border-color: var(--teal); background: #fff; outline: none; }
+.try-card b { font-size: 17px; letter-spacing: -.4px; }
+.try-card > span:not(.who) { color: var(--muted); font-size: 13.5px; }
+.try-card em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--accent-2); margin-top: auto; }
+.try-card .who { color: #0e6f77; background: #e3f3f3; }
+.try-card .proposer-tag { color: #b8462e; background: #fde4dc; }
+@media (max-width: 720px) { .try-cards { grid-template-columns: 1fr; } }
 .flow-h { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .6px; color: var(--accent-2); margin: 0 0 4px; }
 .flow-t { text-align: center; font-size: 20px; letter-spacing: -.6px; margin: 0 0 18px; }
 .flow { list-style: none; padding: 0; margin: 0 0 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; counter-reset: s; }
@@ -113,6 +126,25 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: s
       </ul>
       <span class="go">제안서 작성하기 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8 3.5 12.5 8 8 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
+  </section>
+
+  <section class="try" aria-label="샘플 체험">
+    <div class="try-h"><span class="flow-h">FIRST TIME?</span><h2>처음이신가요? 샘플로 먼저 익혀 보세요</h2>
+      <p>실제 교범 없이도, 가상 교범과 샘플 제안으로 사용법을 연습할 수 있습니다. 연습한 내용은 실제 작업과 섞이지 않습니다.</p></div>
+    <div class="try-cards">
+      <a class="try-card" href="수정제안폼.html?example=1">
+        <span class="who proposer-tag">제안자용</span>
+        <b>작성 예시 보기</b>
+        <span>완성된 예시 제안서로 위치·현행 내용·수정 제안·근거를 어떻게 쓰는지 확인합니다. 예시는 제출되지 않습니다.</span>
+        <em>약 2분</em>
+      </a>
+      <a class="try-card" href="교범비교도구.html?sample=1">
+        <span class="who">작성자용</span>
+        <b>샘플로 체험하기</b>
+        <span>가상 교범 2권과 제안 6건으로 신·구 비교 → 제안 심의 → 수정 반영 → 종합 평가를 10단계 안내에 따라 연습합니다.</span>
+        <em>약 15분 · 10단계</em>
+      </a>
+    </div>
   </section>
 
   <p class="flow-h">HOW IT FLOWS</p>

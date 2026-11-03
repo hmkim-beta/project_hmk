@@ -33,8 +33,17 @@
     <button id="btnLoadWork">작업 파일 불러오기</button>
     <button id="btnSettings">설정</button>
     <button id="btnNew">새 작업</button>
+    <button id="btnSample">샘플 체험</button>
   </div>
 </header>
+<div id="sampleBar" class="sample-bar" hidden>
+  <span class="tag">샘플 체험 중</span>
+  <span class="txt">가상 교범으로 마음껏 연습하세요. 실제 작업은 따로 보관되어 있습니다.</span>
+  <span class="sp"></span>
+  <button id="sampleGuide" class="btn-s">안내 열기</button>
+  <button id="sampleExit" class="btn-s">체험 끝내기</button>
+</div>
+<aside id="tour" class="tour" hidden></aside>
 
 <main>
   <section id="tab-compare">
@@ -49,6 +58,11 @@
       <div id="slotNew" class="slot"></div>
     </div>
     <div id="cmpEmpty" class="intro">
+      <div id="tryBox" class="try-box">
+        <div><span class="eyebrow">처음이신가요?</span><b>샘플로 먼저 체험해 보세요</b>
+          <p>가상 교범 2권과 일선부대 제안 6건이 들어 있는 샘플로 신·구 비교부터 제안 반영, 종합 평가까지 단계별 안내를 따라 연습할 수 있습니다. 지금 작업은 따로 보관됩니다.</p></div>
+        <button id="btnTry" class="primary">샘플로 체험하기</button>
+      </div>
       <aside class="callout">
         <b>작업 내용은 이 브라우저에 저장됩니다. 꼭 백업해 두세요.</b>
         <p>브라우저의 <b>쿠키 및 사이트 데이터</b>를 지우면 매칭·사유·직접 수정한 최종본이 함께 사라집니다. 수시로 <b>[작업 파일 저장]</b>을 눌러 .json 파일로 보관하세요.</p>

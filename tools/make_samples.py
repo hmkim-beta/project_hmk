@@ -267,7 +267,7 @@ def write_proposals():
         {'uid': 'smp-001', 'location': {'page': '3', 'clause': '1-3', 'table': '', 'figure': ''}, 'category': '추가',
          'current': '가. 경계 / 나. 경계 진지 정의만 있음', 'proposed': '"청음초" 용어 정의 추가', 'reason': '야간 경계 시 청음초 운용이 일반화됨', 'images': []},
         {'uid': 'smp-002', 'location': {'page': '7', 'clause': '2-2', 'table': '표 2-1', 'figure': ''}, 'category': '내용 수정',
-         'current': '근무 편성 담당: 부소대장', 'proposed': '근무 편성 담당: 분대장', 'reason': '실제 근무 편성은 분대장이 함', 'images': []},
+         'current': '부소대장', 'proposed': '분대장', 'reason': '표 2-1 근무 편성 담당: 실제 근무 편성은 분대장이 함', 'images': []},
     ])
     proposal_file('제안_가상교범_2사단_김철수_20261021.json',
                   {'unit': '제2보병사단 수색대대', 'rank': '상사', 'name': '김철수', 'contact': '010-0000-0002'}, [
