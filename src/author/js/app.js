@@ -883,10 +883,73 @@ function proposalBlock(rs) {
 
 const overallBox = () => `<section class="panel"><h3>작성자 총평</h3><textarea id="overall" rows="7" placeholder="주요 개정 방향, 핵심 변경 사항 등을 적어 주세요.">${esc(P.summary.overall)}</textarea><div class="print-only overall-print">${esc(P.summary.overall).replace(/\n/g, '<br>')}</div>
   <div class="llm-row no-print">
-    <button id="btnLlmDraft" ${LLM.ENABLED ? '' : 'disabled'} title="${LLM.ENABLED ? '폐쇄망 LLM으로 총평 초안을 만듭니다' : '폐쇄망 LLM 연결 후 사용할 수 있습니다 (docs/LLM_연동_메모.md)'}">AI 총평 초안 생성</button>
-    <button id="btnLlmPrompt" class="ghost" title="LLM에 보낼 요청문을 복사합니다. 내부 LLM 화면에 붙여넣어 쓸 수도 있습니다">LLM 요청문 복사</button>
-    <small class="muted">${LLM.ENABLED ? '' : 'AI 초안은 폐쇄망 LLM 연결 후 사용할 수 있습니다.'}</small>
+    <button id="btnLlmDraft" title="Google Gemini로 총평 초안을 만들어 총평 칸 아래에 덧붙입니다">AI 총평 초안 생성</button>
+    <button id="btnLlmSettings" class="ghost" title="Gemini API 키와 모델을 정합니다">AI 설정</button>
+    <button id="btnLlmPrompt" class="ghost" title="LLM에 보낼 요청문을 복사합니다. 다른 LLM 화면에 붙여넣어 쓸 수도 있습니다">LLM 요청문 복사</button>
+    <small id="llmStatus" class="muted">${esc(llmStatus())}</small>
   </div></section>`;
+
+function llmStatus() {
+  const s = LLM.loadSettings();
+  return s.key ? `${LLM.PROVIDER} · ${s.model} · 키 ${s.remember ? '이 브라우저에 저장됨' : '이 탭에서만 사용'}` : 'Gemini API 키를 넣으면 AI 초안을 만들 수 있습니다 → [AI 설정]';
+}
+
+// Gemini API 키·모델 설정
+function llmSettingsDialog(after) {
+  const s = LLM.loadSettings();
+  modal(`<h3>AI 설정 · Google Gemini</h3>
+    <p class="muted">총평 초안은 Google Gemini API로 만듭니다. 무료 API 키는 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → Get API key</a>에서 받을 수 있습니다.</p>
+    <label class="fld"><span>Gemini API 키</span>
+      <div class="keyrow"><input id="gKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" value="${esc(s.key)}"><button id="gShow" class="ghost" type="button">보기</button></div>
+      <small>키는 이 PC의 브라우저에만 저장되고, 작업 파일·GitHub·서버에는 들어가지 않습니다.</small></label>
+    <label class="fld"><span>모델</span>
+      <input id="gModel" list="gModels" value="${esc(s.model)}" spellcheck="false">
+      <datalist id="gModels">${LLM.MODELS.map((m) => `<option value="${m}">`).join('')}</datalist>
+      <small>기본은 ${LLM.MODELS[0]}. 무료 사용량을 넘으면 ${LLM.MODELS[1]}처럼 가벼운 모델을 골라 보세요.</small></label>
+    <label class="chk"><input id="gRemember" type="checkbox" ${s.remember ? 'checked' : ''}> 이 브라우저에 키 기억 (끄면 탭을 닫을 때 지워짐)</label>
+    <aside class="callout" style="margin:12px 0 0"><b>보내는 내용 확인</b><p>초안을 만들 때 변경 통계, 조항 번호, 바뀐 문구 일부(조항당 약 120자), 작성자가 적은 변경 사유가 Google로 전송됩니다. <b>무료 키는 보낸 내용이 Google 서비스 개선에 쓰일 수 있습니다.</b> 공개되면 안 되는 교범에는 쓰지 마세요.</p></aside>
+    <div id="gMsg" class="muted" style="margin-top:8px"></div>
+    <div class="modal-f"><button id="gClear" class="ghost">키 지우기</button><span class="sp"></span><button id="gTest">키 확인</button><button data-close>취소</button><button id="gSave" class="primary">저장</button></div>`, (box, close) => {
+    const val = () => ({ key: $('#gKey', box).value.trim(), model: $('#gModel', box).value.trim() || LLM.MODELS[0], remember: $('#gRemember', box).checked });
+    const msg = (t, err) => { const m = $('#gMsg', box); m.textContent = t; m.style.color = err ? 'var(--c-del)' : ''; };
+    $('#gShow', box).onclick = () => { const i = $('#gKey', box); i.type = i.type === 'password' ? 'text' : 'password'; $('#gShow', box).textContent = i.type === 'password' ? '보기' : '숨기기'; };
+    $('#gTest', box).onclick = async () => {
+      const v = val(); if (!v.key) return msg('키를 넣어 주세요.', true);
+      msg('확인 중… (교범 내용은 보내지 않습니다)');
+      try { const models = await LLM.testKey(v.key); msg(`키가 정상입니다. 쓸 수 있는 모델 ${models.length}개${models.includes(v.model) ? ` · ${v.model} 사용 가능` : ` · ⚠ ${v.model}은 목록에 없습니다`}`); }
+      catch (e) { msg(e.message, true); }
+    };
+    $('#gClear', box).onclick = () => { LLM.saveSettings({ key: '', model: val().model, remember: false }); $('#gKey', box).value = ''; msg('키를 지웠습니다.'); refreshLlmStatus(); };
+    $('#gSave', box).onclick = () => {
+      const v = val(); if (!v.key) return msg('키를 넣어 주세요.', true);
+      LLM.saveSettings(v); close(); refreshLlmStatus(); toast('AI 설정을 저장했습니다.');
+      if (after) after();
+    };
+  });
+}
+const refreshLlmStatus = () => { const el = $('#llmStatus'); if (el) el.textContent = llmStatus(); };
+
+// 보내기 전 확인 (탭마다 처음 한 번 + 내용 미리보기)
+function confirmLlmSend(prompt) {
+  let ok = false;
+  try { ok = sessionStorage.getItem('singu-llm-ok') === '1'; } catch (e) { /* 저장 불가 */ }
+  if (ok) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (v) => { if (!done) { done = true; resolve(v); } };
+    modal(`<h3>Google Gemini로 보낼까요?</h3>
+      <p class="muted">아래 요청문(${(prompt.system + prompt.user).length.toLocaleString()}자)이 Google 서버로 전송됩니다. 교범 파일 전체는 보내지 않습니다. 무료 키는 보낸 내용이 Google 서비스 개선에 쓰일 수 있습니다.</p>
+      <details><summary>보낼 내용 보기</summary><pre class="llm-preview">${esc(prompt.user)}</pre></details>
+      <label class="chk" style="margin-top:10px"><input id="llmOkKeep" type="checkbox"> 이 탭에서는 다시 묻지 않기</label>
+      <div class="modal-f"><button data-close>취소</button><button id="llmOkGo" class="primary">보내고 초안 만들기</button></div>`, (box, close) => {
+      $('#llmOkGo', box).onclick = () => {
+        if ($('#llmOkKeep', box).checked) { try { sessionStorage.setItem('singu-llm-ok', '1'); } catch (e) { /* 저장 불가 */ } }
+        close(); finish(true);
+      };
+      $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal' || e.target.closest('[data-close]')) finish(false); });
+    });
+  });
+}
 
 // LLM 요청문에 넣을 재료 (비교 결과에서 바로 뽑음)
 function llmPrompt() {
@@ -915,17 +978,25 @@ function bindOverall() {
     const ok = document.execCommand('copy'); ta.remove();
     toast(ok ? `LLM 요청문(${(p.system + p.user).length}자)을 복사했습니다.` : '복사하지 못했습니다.', ok ? '' : 'error');
   };
-  $('#btnLlmDraft').onclick = async () => {
+  $('#btnLlmSettings').onclick = () => llmSettingsDialog();
+  const draft = async () => {
     if (!R.old.length || !R.neu.length) return toast('기존·신규 파일을 모두 올려 주세요.', 'error');
+    if (!LLM.ready()) return llmSettingsDialog(draft); // 키를 넣고 저장하면 이어서 진행
+    const prompt = llmPrompt();
+    if (!(await confirmLlmSend(prompt))) return;
+    const btn = $('#btnLlmDraft');
+    btn.disabled = true; btn.textContent = 'AI 초안 만드는 중…';
     try {
-      toast('AI 총평 초안을 만드는 중입니다…');
-      const text = await LLM.draftSummary(llmPrompt());
-      if (!text) return;
+      const text = await LLM.draftSummary(prompt);
       if (P.summary.overall.trim() && !confirm('지금 총평 아래에 AI 초안을 덧붙일까요?')) return;
-      P.summary.overall = (P.summary.overall.trim() ? P.summary.overall.trim() + '\n\n' : '') + `[AI 초안 · 검토 필요]\n${text}`;
+      const { model } = LLM.loadSettings();
+      P.summary.overall = (P.summary.overall.trim() ? P.summary.overall.trim() + '\n\n' : '') + `[AI 초안 · ${LLM.PROVIDER} ${model} · 검토 필요]\n${text}`;
       dirty(); renderReport();
+      toast('AI 초안을 총평 칸에 덧붙였습니다. 수치와 조항 번호를 꼭 확인해 주세요.');
     } catch (e) { toast(e.message, 'error'); }
+    finally { const b = $('#btnLlmDraft'); if (b) { b.disabled = false; b.textContent = 'AI 총평 초안 생성'; } }
   };
+  $('#btnLlmDraft').onclick = draft;
 }
 
 function exportReportXlsx() {
