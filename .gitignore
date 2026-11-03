@@ -1,0 +1,15 @@
+# 실제 훈령 원본(시험용) — 저장소에 올리지 않음
+/*.hwp
+/*.hwpx
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
+
+# 개인·로컬 설정
+.claude/settings.local.json
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

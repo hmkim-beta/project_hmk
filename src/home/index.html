@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>신구대조전</title>
+<link rel="icon" href="{{LOGO_MARK}}">
+<style>
+:root {
+  --navy: #133046; --teal: #15959F; --cream: #F1E4B3; --salmon: #F4A090; --coral: #F26144; --green: #4fb995;
+  --bg: #faf6ea; --ink: #1b2b3c; --muted: #66707c; --line: #e4dcc4; --line-2: #f0eadb;
+  --accent: #15959F; --accent-hover: #0f7a83; --accent-2: #e2553a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.65 "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", system-ui, sans-serif; }
+a { color: inherit; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
+
+.top { padding: 18px 0; }
+.top .wrap { display: flex; align-items: center; gap: 10px; }
+.local { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 4px 12px; margin-left: auto; }
+.local i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+.hero { text-align: center; padding: clamp(28px, 6vw, 64px) 0 clamp(24px, 5vw, 44px); }
+.hero h1 { margin: 0; }
+.hero h1 img { width: min(560px, 92%); height: auto; display: block; margin: 0 auto; }
+.hero h1 span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.tagline { font-size: clamp(19px, 2.6vw, 25px); font-weight: 700; letter-spacing: -.8px; margin: 26px 0 6px; }
+.lead { color: var(--muted); margin: 0 auto; max-width: 620px; }
+
+.doors { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 40px; }
+.door { position: relative; display: flex; flex-direction: column; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 26px 28px 24px; text-decoration: none; transition: transform .15s, box-shadow .15s, border-color .15s; overflow: hidden; }
+.door::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--teal); }
+.door.proposer::before { background: var(--salmon); }
+.door:hover, .door:focus-visible { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(19, 48, 70, .12); border-color: var(--teal); outline: none; }
+.door.proposer:hover, .door.proposer:focus-visible { border-color: var(--salmon); }
+.who { display: inline-flex; align-self: flex-start; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .5px; color: #0e6f77; background: #e3f3f3; border-radius: 12px; padding: 2px 11px; }
+.proposer .who { color: #b8462e; background: #fde4dc; }
+.door h2 { margin: 2px 0 0; font-size: 23px; letter-spacing: -.8px; }
+.door p { margin: 0; color: var(--muted); }
+.door ul { list-style: none; margin: 4px 0 6px; padding: 0; display: grid; gap: 6px; }
+.door li { display: flex; gap: 10px; align-items: baseline; font-size: 14px; }
+.door li b { flex: none; min-width: 64px; font-size: 13px; color: var(--navy); }
+.door li span { color: var(--muted); }
+.go { margin-top: auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; background: var(--teal); color: #fff; font-weight: 700; border-radius: 9px; padding: 11px 20px; box-shadow: 0 3px 8px rgba(21, 149, 159, .2); }
+.proposer .go { background: var(--coral); box-shadow: 0 3px 8px rgba(242, 97, 68, .2); }
+.door:hover .go { filter: brightness(.94); }
+.go svg { width: 16px; height: 16px; }
+
+.flow-h { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .6px; color: var(--accent-2); margin: 0 0 4px; }
+.flow-t { text-align: center; font-size: 20px; letter-spacing: -.6px; margin: 0 0 18px; }
+.flow { list-style: none; padding: 0; margin: 0 0 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; counter-reset: s; }
+.flow li { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; font-size: 13.5px; color: var(--muted); position: relative; }
+.flow li::before { counter-increment: s; content: '0' counter(s); display: block; font-size: 12px; font-weight: 700; color: var(--accent-2); letter-spacing: .5px; }
+.flow li b { display: block; color: var(--ink); font-size: 15px; margin: 2px 0 2px; }
+.flow li em { font-style: normal; font-size: 12px; font-weight: 700; border-radius: 8px; padding: 0 7px; margin-left: 4px; vertical-align: 1px; }
+.flow li em.a { color: #0e6f77; background: #e3f3f3; }
+.flow li em.p { color: #b8462e; background: #fde4dc; }
+
+.notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 36px; }
+.note { background: #fcf5dc; border: 1px solid var(--cream); border-radius: 12px; padding: 14px 16px; font-size: 13.5px; color: #5e5848; }
+.note b { display: block; color: #4a3a12; margin-bottom: 2px; }
+
+footer { border-top: 1px solid var(--line); padding: 18px 0 30px; font-size: 12.5px; color: var(--muted); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .flow { grid-template-columns: repeat(2, 1fr); }
+  .notes { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .doors { grid-template-columns: 1fr; }
+  .local { display: none; }
+}
+@media (max-width: 420px) {
+  .flow { grid-template-columns: 1fr; }
+  .door { padding: 22px 20px 20px; }
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><span class="local"><i></i>모든 처리는 이 PC 안에서만 · 외부 전송 없음</span></div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1><img src="{{LOGO}}" alt=""><span>신구대조전</span></h1>
+    <p class="tagline">교범 개정, 바뀐 곳만 정확하게</p>
+    <p class="lead">현장의 수정 제안을 모으고, 반영하고, 신·구 교범을 조항끼리 맞대어 대비표까지. 내 역할에 맞는 입구로 들어가세요.</p>
+  </section>
+
+  <section class="doors" aria-label="사용자별 입구">
+    <a class="door author" href="교범비교도구.html">
+      <span class="who">작성자용 · 교범 작성자</span>
+      <h2>교범 신·구 비교 도구</h2>
+      <p>교리연구 담당자가 개정 작업 전 과정을 한 화면에서 처리합니다.</p>
+      <ul>
+        <li><b>신·구 비교</b><span>번호가 밀려도 조항끼리 짝지어 추가·삭제·수정·이동 표시</span></li>
+        <li><b>제안 종합</b><span>제안 파일 일괄 불러오기, 심의 결과 입력, 종합 엑셀</span></li>
+        <li><b>수정 반영</b><span>심의한 제안을 현재 교범에 반영하고 결과 확인</span></li>
+        <li><b>종합 평가</b><span>장별·유형별 통계, 변경 폭 Top 10, 총평</span></li>
+      </ul>
+      <span class="go">작성자 도구 열기 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8 3.5 12.5 8 8 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </a>
+    <a class="door proposer" href="수정제안폼.html">
+      <span class="who">제안자용 · 일선부대 사용자</span>
+      <h2>교범 수정 제안서</h2>
+      <p>교범을 쓰다 고칠 곳을 발견했다면 여기서 제안을 작성해 보내 주세요.</p>
+      <ul>
+        <li><b>위치</b><span>페이지 또는 장·절·항, 표·그림 번호</span></li>
+        <li><b>내용</b><span>현행 문구, 수정 제안, 제안 근거 (여러 건 가능)</span></li>
+        <li><b>첨부</b><span>그림 변경 등 이미지 첨부, 큰 이미지는 자동 축소</span></li>
+        <li><b>보내기</b><span>.json 파일로 저장해 메일·공유폴더로 담당자에게</span></li>
+      </ul>
+      <span class="go">제안서 작성하기 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8 3.5 12.5 8 8 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </a>
+  </section>
+
+  <p class="flow-h">HOW IT FLOWS</p>
+  <h2 class="flow-t">제안에서 대비표까지</h2>
+  <ol class="flow">
+    <li><b>제안 작성<em class="p">제안자</em></b>수정 제안서를 작성해 .json 파일로 보냅니다.</li>
+    <li><b>제안 종합·심의<em class="a">작성자</em></b>제안 파일을 모아 반영·부분반영·미반영을 정합니다.</li>
+    <li><b>수정 반영<em class="a">작성자</em></b>반영할 제안을 현재 교범에 넣고 직접 다듬습니다.</li>
+    <li><b>신·구 비교·대비표<em class="a">작성자</em></b>바뀐 조항을 확인하고 대비표·최종본(HWPX)을 저장합니다.</li>
+  </ol>
+
+  <section class="notes">
+    <div class="note"><b>인터넷 없이 동작</b>HTML 파일만 열면 됩니다. 파일은 이 PC 밖으로 전송되지 않습니다.</div>
+    <div class="note"><b>권장 브라우저</b>Chrome 또는 Edge 최신 버전에서 사용하세요.</div>
+    <div class="note"><b>작업은 꼭 백업</b>작성자 도구의 [작업 파일 저장]으로 수시로 .json 백업을 남기세요.</div>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>신구대조전 · 교범 신·구 비교 도구 (MVP)</span><span>HWPX · HWP · XLSX · JSON</span></div></footer>
+</body>
+</html>

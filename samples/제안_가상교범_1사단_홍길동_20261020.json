@@ -1,0 +1,44 @@
+{
+ "type": "kyobeom-proposal",
+ "version": 1,
+ "savedAt": "2026-10-20T09:00:00.000Z",
+ "proposer": {
+  "unit": "제1보병사단 11연대 3대대",
+  "rank": "중사",
+  "name": "홍길동",
+  "contact": "010-0000-0001"
+ },
+ "manual": "가상 야전교범 0-00 소부대 경계작전",
+ "items": [
+  {
+   "uid": "smp-001",
+   "location": {
+    "page": "3",
+    "clause": "1-3",
+    "table": "",
+    "figure": "",
+    "manual": "가상 야전교범 0-00 소부대 경계작전"
+   },
+   "category": "추가",
+   "current": "가. 경계 / 나. 경계 진지 정의만 있음",
+   "proposed": "\"청음초\" 용어 정의 추가",
+   "reason": "야간 경계 시 청음초 운용이 일반화됨",
+   "images": []
+  },
+  {
+   "uid": "smp-002",
+   "location": {
+    "page": "7",
+    "clause": "2-2",
+    "table": "표 2-1",
+    "figure": "",
+    "manual": "가상 야전교범 0-00 소부대 경계작전"
+   },
+   "category": "내용 수정",
+   "current": "근무 편성 담당: 부소대장",
+   "proposed": "근무 편성 담당: 분대장",
+   "reason": "실제 근무 편성은 분대장이 함",
+   "images": []
+  }
+ ]
+}

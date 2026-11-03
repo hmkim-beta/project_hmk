@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>신구대조전 · 작성자 도구</title>
+<link rel="icon" href="{{LOGO_MARK}}">
+<!--STYLE-->
+</head>
+<body>
+<header class="top" id="top">
+  <a class="brand" href="index.html" title="신구대조전 홈으로">
+    <span class="logo"><img src="{{LOGO_MARK}}" alt=""></span>
+    <div class="brand-t"><b>신구대조전</b><small>작성자 도구</small></div>
+  </a>
+  <nav class="tabs">
+    <button data-tab="compare">신·구 비교</button>
+    <button data-tab="proposals">제안 종합</button>
+    <button data-tab="apply">수정 반영</button>
+    <button data-tab="report">종합 평가</button>
+  </nav>
+  <span class="local"><i></i>모든 처리는 이 PC 안에서만 이루어집니다</span>
+  <div class="meta">
+    <input id="manualName" placeholder="교범명">
+    <input id="authorName" placeholder="작성자" class="short">
+  </div>
+  <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+  <div class="actions" id="actions">
+    <span id="saveState" class="save-state"></span>
+    <button id="btnSaveWork" class="primary">작업 파일 저장</button>
+    <button id="btnLoadWork">작업 파일 불러오기</button>
+    <button id="btnSettings">설정</button>
+    <button id="btnNew">새 작업</button>
+  </div>
+</header>
+
+<main>
+  <section id="tab-compare">
+    <div id="cmpHero" class="hero">
+      <div class="eyebrow">HWPX · HWP 교범 비교</div>
+      <h1>번호가 밀려도, 바뀐 조항만 정확하게</h1>
+      <p class="lead">기존 교범과 신규 교범을 넣으면 조항끼리 짝을 지어 추가·삭제·수정·이동을 빠짐없이 보여 줍니다.</p>
+    </div>
+    <div class="uploads">
+      <div id="slotOld" class="slot"></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div id="slotNew" class="slot"></div>
+    </div>
+    <div id="cmpEmpty" class="intro">
+      <aside class="callout">
+        <b>작업 내용은 이 브라우저에 저장됩니다. 꼭 백업해 두세요.</b>
+        <p>브라우저의 <b>쿠키 및 사이트 데이터</b>를 지우면 매칭·사유·직접 수정한 최종본이 함께 사라집니다. 수시로 <b>[작업 파일 저장]</b>을 눌러 .json 파일로 보관하세요.</p>
+      </aside>
+      <ol class="steps">
+        <li><span>01</span><div><b>두 파일 올리기</b><p>기존 교범과 신규(작업 중) 교범의 HWPX 파일을 위 두 칸에 올립니다. HWP 파일도 읽을 수 있습니다.</p></div></li>
+        <li><span>02</span><div><b>바뀐 곳 확인</b><p>제목과 내용이 비슷한 조항끼리 짝을 짓고, 추가·삭제·수정·이동을 색으로 표시합니다.</p></div></li>
+        <li><span>03</span><div><b>보정하고 다듬기</b><p>잘못된 짝은 연결 해제·수동 연결로 바로잡고, 개정 내용은 [수정]으로 직접 고쳐 최종본으로 저장합니다.</p></div></li>
+        <li><span>04</span><div><b>대비표 내보내기</b><p>대비표 엑셀로 내려받거나, 대비표 복사 후 한글 양식에 붙여넣습니다.</p></div></li>
+      </ol>
+    </div>
+    <div id="cmpBody" class="cmp-body" hidden>
+      <aside id="toc"></aside>
+      <div class="cmp-main">
+        <div class="toolbar sticky">
+          <div id="viewToggle" class="seg"></div>
+          <div id="typeChips" class="chips"></div>
+          <input id="q" type="search" placeholder="내용·사유 검색">
+          <select id="diffMode" title="바뀐 부분 강조 단위"><option value="char">글자 단위</option><option value="word">단어 단위</option></select>
+          <button id="btnRematch" title="수동 연결은 유지하고 자동 매칭을 다시 실행">다시 매칭</button>
+          <span class="sp"></span>
+          <label class="chk" title="체크하면 동일한 조항까지 대비표에 넣습니다"><input id="exportAll" type="checkbox"> 동일 조항 포함</label>
+          <button id="btnFinal" title="직접 수정한 내용을 반영한 신규 교범을 한글(HWPX) 또는 텍스트로 저장">최종본 저장</button>
+          <button id="btnCopy" title="한글 문서에 붙여넣을 수 있게 표로 복사">대비표 복사</button>
+          <button id="btnXlsx" class="primary">대비표 엑셀</button>
+        </div>
+        <div class="list-h"><span class="colh"><em>01</em> 기존 (구)</span><span class="colh"><em>02</em> 개정 (신)</span><span id="listCount" class="muted"></span></div>
+        <div id="pairList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-proposals" hidden>
+    <div class="hero small">
+      <div class="eyebrow">PROPOSALS</div>
+      <h1>수정 제안 종합</h1>
+    </div>
+    <div id="propDrop" class="drop wide"><span class="eyebrow">JSON</span><b>수정 제안 파일 불러오기</b><span>제안자에게 받은 .json 파일 여러 개를 한꺼번에 끌어 놓거나 눌러서 선택하세요.</span></div>
+    <div class="toolbar">
+      <span id="propStats"></span>
+      <span class="sp"></span>
+      <select id="pfCat"></select>
+      <select id="pfRes"></select>
+      <input id="pfQ" type="search" placeholder="검색">
+      <button id="btnPropZip">첨부 이미지 ZIP</button>
+      <button id="btnPropXlsx" class="primary">종합 엑셀</button>
+    </div>
+    <div id="propTable"></div>
+  </section>
+
+  <section id="tab-apply" hidden>
+    <div class="hero small">
+      <div class="eyebrow">APPLY PROPOSALS</div>
+      <h1>수정 반영</h1>
+      <p class="lead">심의를 마친 종합 엑셀과 현재 교범을 함께 올리면, 반영하기로 한 제안의 '현행 내용'을 교범에서 찾아 '수정 제안'으로 바꾸고 바뀐 조항을 보여 줍니다.</p>
+    </div>
+    <div class="uploads">
+      <div id="apSlotX" class="slot"></div>
+      <div class="arrow" aria-hidden="true">+</div>
+      <div id="apSlotD" class="slot"></div>
+    </div>
+    <div class="ap-alt"><button id="apUseProps" class="ghost" hidden>엑셀 대신 [제안 종합] 탭의 제안 목록 사용</button></div>
+    <div id="apEmpty" class="intro">
+      <ol class="steps">
+        <li><span>01</span><div><b>종합 엑셀 올리기</b><p>[제안 종합]의 종합 엑셀에 심의 결과(반영·부분반영·미반영)를 적어 올립니다. 엑셀에서 고쳐 저장한 파일도 됩니다.</p></div></li>
+        <li><span>02</span><div><b>현재 교범 올리기</b><p>제안을 반영할 지금 시점의 교범 HWPX(HWP) 파일을 올립니다.</p></div></li>
+        <li><span>03</span><div><b>반영 결과 확인</b><p>띄어쓰기·가운뎃점 차이는 무시하고 현행 문구를 찾아 바꿉니다. 못 찾은 제안은 대상 조항을 골라 [수정]으로 직접 반영합니다.</p></div></li>
+        <li><span>04</span><div><b>신·구 비교로 보내기</b><p>반영 결과를 [신·구 비교]로 보내 대비표 엑셀·복사, 최종본 저장으로 이어 갑니다.</p></div></li>
+      </ol>
+    </div>
+    <div id="apBody" hidden>
+      <div class="toolbar">
+        <span class="tlabel">반영 범위</span><div id="apScope" class="scope"></div>
+        <span class="sp"></span>
+        <button id="apReset" class="ghost">비우기</button>
+        <button id="apText" title="한글(HWPX) 또는 텍스트로 저장">반영본 저장</button>
+        <button id="apXlsx">반영 결과 엑셀</button>
+        <button id="apSend" class="primary">신·구 비교로 보내기</button>
+      </div>
+      <div id="apStats" class="ap-stats"></div>
+      <h3 class="sec-h"><span class="eyebrow">01</span> 제안별 반영 상태</h3>
+      <div id="apItems" class="ap-items"></div>
+      <h3 class="sec-h"><span class="eyebrow">02</span> 조항별 반영 결과</h3>
+      <div class="list-h"><span class="colh">반영 전 (현재 교범)</span><span class="colh">반영 후</span><span></span></div>
+      <div id="apCards"></div>
+    </div>
+  </section>
+
+  <section id="tab-report" hidden>
+    <div class="toolbar no-print plain">
+      <div class="hero small inline">
+        <div class="eyebrow">REPORT</div>
+        <h1>변경 종합 평가</h1>
+      </div>
+      <span class="sp"></span>
+      <button id="btnPrint">인쇄</button>
+      <button id="btnReportXlsx" class="primary">리포트 엑셀</button>
+    </div>
+    <div class="print-only print-head"></div>
+    <div id="reportBody"></div>
+  </section>
+</main>
+
+<div id="modal" class="modal hidden"></div>
+<div id="toast" class="toast"></div>
+<!--SCRIPTS-->
+</body>
+</html>

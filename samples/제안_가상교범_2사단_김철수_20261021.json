@@ -1,0 +1,35 @@
+{
+ "type": "kyobeom-proposal",
+ "version": 1,
+ "savedAt": "2026-10-20T09:00:00.000Z",
+ "proposer": {
+  "unit": "제2보병사단 수색대대",
+  "rank": "상사",
+  "name": "김철수",
+  "contact": "010-0000-0002"
+ },
+ "manual": "가상 야전교범 0-00 소부대 경계작전",
+ "items": [
+  {
+   "uid": "smp-003",
+   "location": {
+    "page": "9",
+    "clause": "2-5",
+    "table": "",
+    "figure": "그림 2-1",
+    "manual": "가상 야전교범 0-00 소부대 경계작전"
+   },
+   "category": "그림 변경",
+   "current": "철조망만 표시됨",
+   "proposed": "지뢰 설치 예도 함께 표시",
+   "reason": "실제 장애물 구성과 맞지 않음",
+   "images": [
+    {
+     "name": "그림2-1_수정안.png",
+     "type": "image/png",
+     "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAoCAIAAADBrGu+AAAAV0lEQVR4nO3PQQkAMAzAwAqrfyZrIvY4BoEIuMzZ/brhgga0oAEtaEALGtCCBrSgAS1oQAsa0IIGtKABLWhACxrQgga0oAEtaEALGtCCBrSgAS1oQAseu6I+gLWOzJlMAAAAAElFTkSuQmCC"
+    }
+   ]
+  }
+ ]
+}

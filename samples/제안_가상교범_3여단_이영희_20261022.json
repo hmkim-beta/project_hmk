@@ -1,0 +1,65 @@
+{
+ "type": "kyobeom-proposal",
+ "version": 1,
+ "savedAt": "2026-10-20T09:00:00.000Z",
+ "proposer": {
+  "unit": "제3기갑여단 본부중대",
+  "rank": "대위",
+  "name": "이영희",
+  "contact": "010-0000-0003"
+ },
+ "manual": "가상 야전교범 0-00 소부대 경계작전",
+ "items": [
+  {
+   "uid": "smp-004",
+   "location": {
+    "page": "",
+    "clause": "3-2",
+    "table": "",
+    "figure": "",
+    "manual": "가상 야전교범 0-00 소부대 경계작전"
+   },
+   "category": "내용 수정",
+   "current": "이상 징후를 식별하면 즉시 보고한다.",
+   "proposed": "이상 징후를 식별하면 즉시 분대장에게 보고하고 관측을 계속한다.",
+   "reason": "보고 후 관측 중단 사례 다수",
+   "images": []
+  },
+  {
+   "uid": "smp-005",
+   "location": {
+    "page": "12",
+    "clause": "3-4",
+    "table": "",
+    "figure": "그림 3-1",
+    "manual": "가상 야전교범 0-00 소부대 경계작전"
+   },
+   "category": "삭제",
+   "current": "그림 3-1 야간 투시 장비 운용 예",
+   "proposed": "그림 삭제",
+   "reason": "구형 장비 사진임",
+   "images": [
+    {
+     "name": "참고.png",
+     "type": "image/png",
+     "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAoCAIAAADBrGu+AAAAWUlEQVR4nO3PUQkAIBTAwBfMYEY0liH8OITBAtxm7fN1wwUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWPHYBo9DY01J6IX0AAAAASUVORK5CYII="
+    }
+   ]
+  },
+  {
+   "uid": "smp-006",
+   "location": {
+    "page": "1",
+    "clause": "1-1",
+    "table": "",
+    "figure": "",
+    "manual": "가상 야전교범 0-00 소부대 경계작전"
+   },
+   "category": "오타·표현",
+   "current": "제시하는 데 목적이 있다.",
+   "proposed": "제시하는 것을 목적으로 한다.",
+   "reason": "표현 통일",
+   "images": []
+  }
+ ]
+}
