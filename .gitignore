@@ -17,3 +17,6 @@ __pycache__/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# 단독망 패키지 (tools/make_offline_package.py로 생성)
+/release/
